@@ -11,7 +11,7 @@ from autosklearn.data.abstract_data_manager import AbstractDataManager
 from autosklearn.data.competition_data_manager import CompetitionDataManager
 from autosklearn.evaluation import CVEvaluator, HoldoutEvaluator, \
     NestedCVEvaluator, TestEvaluator, get_new_run_num
-from autosklearn.util.paramsklearn import get_configuration_space
+from autosklearn.util.pipeline import get_configuration_space
 from autosklearn.util import Backend
 
 
@@ -59,9 +59,9 @@ def _get_base_dict():
     }
 
 
-def make_mode_holdout(data, seed, configuration, num_run):
+def make_mode_holdout(data, seed, configuration, num_run, output_dir):
     global evaluator
-    evaluator = HoldoutEvaluator(data, configuration,
+    evaluator = HoldoutEvaluator(data, output_dir, configuration,
                                  seed=seed,
                                  num_run=num_run,
                                  **_get_base_dict())
@@ -69,14 +69,15 @@ def make_mode_holdout(data, seed, configuration, num_run):
     signal.signal(15, empty_signal_handler)
     evaluator.finish_up()
 
-    backend = Backend(None, os.getcwd())
+    backend = Backend(None, output_dir)
     if os.path.exists(backend.get_model_dir()):
         backend.save_model(evaluator.model, num_run, seed)
 
 
-def make_mode_holdout_iterative_fit(data, seed, configuration, num_run):
+def make_mode_holdout_iterative_fit(data, seed, configuration, num_run,
+                                    output_dir):
     global evaluator
-    evaluator = HoldoutEvaluator(data, configuration,
+    evaluator = HoldoutEvaluator(data, output_dir, configuration,
                                  seed=seed,
                                  num_run=num_run,
                                  **_get_base_dict())
@@ -84,14 +85,14 @@ def make_mode_holdout_iterative_fit(data, seed, configuration, num_run):
     signal.signal(15, empty_signal_handler)
     evaluator.finish_up()
 
-    backend = Backend(None, os.getcwd())
+    backend = Backend(None, output_dir)
     if os.path.exists(backend.get_model_dir()):
         backend.save_model(evaluator.model, num_run, seed)
 
 
-def make_mode_test(data, seed, configuration, metric):
+def make_mode_test(data, seed, configuration, metric, output_dir):
     global evaluator
-    evaluator = TestEvaluator(data,
+    evaluator = TestEvaluator(data, output_dir,
                               configuration,
                               seed=seed,
                               all_scoring_functions=True,
@@ -112,9 +113,9 @@ def make_mode_test(data, seed, configuration, metric):
            additional_run_info))
 
 
-def make_mode_cv(data, seed, configuration, num_run, folds):
+def make_mode_cv(data, seed, configuration, num_run, folds, output_dir):
     global evaluator
-    evaluator = CVEvaluator(data, configuration,
+    evaluator = CVEvaluator(data, output_dir, configuration,
                             cv_folds=folds,
                             seed=seed,
                             num_run=num_run,
@@ -125,33 +126,33 @@ def make_mode_cv(data, seed, configuration, num_run, folds):
 
 
 def make_mode_partial_cv(data, seed, configuration, num_run, metric, fold,
-                         folds):
+                         folds, output_dir):
     global evaluator
-    evaluator = CVEvaluator(data, configuration,
+    evaluator = CVEvaluator(data, output_dir, configuration,
                             cv_folds=folds,
                             seed=seed,
                             num_run=num_run,
                             **_get_base_dict())
     evaluator.partial_fit(fold)
     signal.signal(15, empty_signal_handler)
-    scores, _, _, _ = evaluator.predict()
+    losses, _, _, _ = evaluator.loss_and_predict()
     duration = time.time() - evaluator.starttime
 
-    score = scores[metric]
+    loss = losses[metric]
     additional_run_info = ';'.join(['%s: %s' % (m_, value)
-                                    for m_, value in scores.items()])
+                                    for m_, value in losses.items()])
     additional_run_info += ';' + 'duration: ' + str(duration)
 
-    print(metric, score, additional_run_info)
+    print(metric, loss, additional_run_info)
     print('Result for ParamILS: %s, %f, 1, %f, %d, %s' %
-          ('SAT', abs(duration), score, evaluator.seed,
+          ('SAT', abs(duration), loss, evaluator.seed,
            additional_run_info))
 
 
 def make_mode_nested_cv(data, seed, configuration, num_run, inner_folds,
-                        outer_folds):
+                        outer_folds, output_dir):
     global evaluator
-    evaluator = NestedCVEvaluator(data, configuration,
+    evaluator = NestedCVEvaluator(data, output_dir, configuration,
                                   inner_cv_folds=inner_folds,
                                   outer_cv_folds=outer_folds,
                                   seed=seed,
@@ -162,7 +163,8 @@ def make_mode_nested_cv(data, seed, configuration, num_run, inner_folds,
     evaluator.finish_up()
 
 
-def main(dataset_info, mode, seed, params, mode_args=None):
+def main(dataset_info, mode, seed, params,
+         mode_args=None, output_dir=None):
     """This command line interface has three different operation modes:
 
     * CV: useful for the Tweakathon
@@ -175,10 +177,12 @@ def main(dataset_info, mode, seed, params, mode_args=None):
     if mode_args is None:
         mode_args = {}
 
-    output_dir = os.getcwd()
+    if output_dir is None:
+        output_dir = os.getcwd()
 
     if not isinstance(dataset_info, AbstractDataManager):
-        D = store_and_or_load_data(dataset_info=dataset_info, outputdir=output_dir)
+        D = store_and_or_load_data(dataset_info=dataset_info,
+                                   outputdir=output_dir)
     else:
         D = dataset_info
     metric = D.info['metric']
@@ -210,18 +214,22 @@ def main(dataset_info, mode, seed, params, mode_args=None):
     global evaluator
 
     if mode == 'holdout':
-        make_mode_holdout(D, seed, configuration, num_run)
+        make_mode_holdout(D, seed, configuration, num_run, output_dir)
     elif mode == 'holdout-iterative-fit':
-        make_mode_holdout_iterative_fit(D, seed, configuration, num_run)
+        make_mode_holdout_iterative_fit(D, seed, configuration, num_run,
+                                        output_dir)
     elif mode == 'test':
-        make_mode_test(D, seed, configuration, metric)
+        make_mode_test(D, seed, configuration, metric, output_dir)
     elif mode == 'cv':
-        make_mode_cv(D, seed, configuration, num_run, mode_args['folds'])
+        make_mode_cv(D, seed, configuration, num_run, mode_args['folds'],
+                     output_dir)
     elif mode == 'partial-cv':
         make_mode_partial_cv(D, seed, configuration, num_run,
-                             metric, mode_args['fold'], mode_args['folds'])
+                             metric, mode_args['fold'], mode_args['folds'],
+                             output_dir)
     elif mode == 'nested-cv':
         make_mode_nested_cv(D, seed, configuration, num_run,
-                            mode_args['inner_folds'], mode_args['outer_folds'])
+                            mode_args['inner_folds'], mode_args['outer_folds'],
+                            output_dir)
     else:
         raise ValueError('Must choose a legal mode.')

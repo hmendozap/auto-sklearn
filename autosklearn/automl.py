@@ -26,7 +26,7 @@ from autosklearn.metalearning.mismbo import \
     convert_conf2smac_string
 from autosklearn.evaluation import calculate_score
 from autosklearn.util import StopWatch, get_logger, setup_logger, \
-    get_auto_seed, set_auto_seed, del_auto_seed, submit_process, paramsklearn, \
+    get_auto_seed, set_auto_seed, del_auto_seed, submit_process, pipeline, \
     Backend
 from autosklearn.util.smac import run_smac
 
@@ -76,7 +76,7 @@ def _create_search_space(tmp_dir, data_info, backend, watcher, logger,
     task_name = 'CreateConfigSpace'
     watcher.start_task(task_name)
     configspace_path = os.path.join(tmp_dir, 'space.pcs')
-    configuration_space = paramsklearn.get_configuration_space(
+    configuration_space = pipeline.get_configuration_space(
         data_info,
         include_estimators=include_estimators,
         include_preprocessors=include_preprocessors)
@@ -298,11 +298,14 @@ class AutoML(BaseEstimator, multiprocessing.Process):
         return time_for_load_data
 
     def _do_dummy_prediction(self, datamanager):
+        self._logger.info("Starting to create dummy predictions.")
         autosklearn.cli.base_interface.main(datamanager,
                                             self._resampling_strategy,
                                             None,
                                             None,
-                                            mode_args=self._resampling_strategy_arguments)
+                                            mode_args=self._resampling_strategy_arguments,
+                                            output_dir=self._tmp_dir)
+        self._logger.info("Finished creating dummy predictions.")
 
     def _fit(self, datamanager):
         # Reset learnt stuff
@@ -352,7 +355,8 @@ class AutoML(BaseEstimator, multiprocessing.Process):
                 self._logger)
 
         # == Perform dummy predictions
-        self._do_dummy_prediction(datamanager)
+        if self._resampling_strategy in ['holdout', 'holdout-iterative-fit']:
+            self._do_dummy_prediction(datamanager)
 
         # = Create a searchspace
         # Do this before One Hot Encoding to make sure that it creates a
@@ -370,6 +374,12 @@ class AutoML(BaseEstimator, multiprocessing.Process):
             self._include_estimators,
             self._include_preprocessors)
         self.configuration_space_created_hook(datamanager)
+
+        # == RUN ensemble builder
+        # Do this before calculating the meta-features to make sure that the
+        # dummy predictions are actually included in the ensemble even if
+        # calculating the meta-features takes very long
+        proc_ensembles = self.run_ensemble_builder()
 
         # == Calculate metafeatures
         meta_features = _calculate_metafeatures(
@@ -480,9 +490,6 @@ class AutoML(BaseEstimator, multiprocessing.Process):
                              resampling_strategy=self._resampling_strategy,
                              resampling_strategy_arguments=self._resampling_strategy_arguments,
                              shared_mode=self._shared_mode)
-
-        # == RUN ensemble builder
-        proc_ensembles = self.run_ensemble_builder()
 
         procs = []
 
