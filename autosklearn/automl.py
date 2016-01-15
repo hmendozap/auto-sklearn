@@ -439,7 +439,8 @@ class AutoML(BaseEstimator, multiprocessing.Process):
 
         # == RUN SMAC
         if (datamanager.info["task"] == BINARY_CLASSIFICATION) or \
-            (datamanager.info["task"] == MULTICLASS_CLASSIFICATION):
+            (datamanager.info["task"] == MULTICLASS_CLASSIFICATION) and \
+                self.configuration_space is None:
             config = {'balancing:strategy': 'weighting',
                       'classifier:__choice__': 'sgd',
                       'classifier:sgd:loss': 'hinge',

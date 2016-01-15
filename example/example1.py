@@ -4,7 +4,7 @@ from __future__ import print_function
 import sklearn.datasets
 import numpy as np
 
-import autosklearn
+import autosklearn.estimators as autosklearn
 
 
 def main():
