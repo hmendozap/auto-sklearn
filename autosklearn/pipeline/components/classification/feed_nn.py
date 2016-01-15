@@ -8,12 +8,12 @@ from HPOlibConfigSpace.hyperparameters import UniformFloatHyperparameter, \
     UniformIntegerHyperparameter, CategoricalHyperparameter, \
     UnParametrizedHyperparameter
 
-from ParamSklearn.components.base import ParamSklearnClassificationAlgorithm
-from ParamSklearn.constants import *
-from ParamSklearn.implementations import FeedForwardNet
+from autosklearn.pipeline.components.base import AutoSklearnClassificationAlgorithm
+from autosklearn.pipeline.constants import *
+from autosklearn.pipeline.implementations import FeedForwardNet
 
 
-class Feed_NN(ParamSklearnClassificationAlgorithm):
+class Feed_NN(AutoSklearnClassificationAlgorithm):
     def __init__(self, batch_size, num_layers, num_units_layer_1,
                  num_units_layer_2, num_units_layer_3,num_units_layer_4,
                  num_units_layer_5, num_units_layer_6, dropout_layer_1,

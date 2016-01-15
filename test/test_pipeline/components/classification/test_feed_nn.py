@@ -1,7 +1,7 @@
 import unittest
 
-from ParamSklearn.components.classification.feed_nn import Feed_NN
-from ParamSklearn.util import _test_classifier, _test_classifier_predict_proba
+from autosklearn.pipeline.components.classification.feed_nn import Feed_NN
+from autosklearn.pipeline.util import _test_classifier, _test_classifier_predict_proba
 
 import sklearn.metrics
 import numpy as np

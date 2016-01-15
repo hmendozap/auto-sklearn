@@ -2,7 +2,8 @@ import unittest
 import os
 import numpy as np
 
-from ParamSklearn.implementations.FeedForwardNet import FeedForwardNet
+from autosklearn.pipeline.implementations.FeedForwardNet import FeedForwardNet
+
 
 class TestFeedForwardNet(unittest.TestCase):
     def test_initial_feed_implementation(self):
