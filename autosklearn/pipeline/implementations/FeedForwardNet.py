@@ -28,7 +28,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 
 class FeedForwardNet(object):
     def __init__(self, input_shape=(100, 1, 1, 28*28),
-                 batch_size=100, num_layers=2, num_units_per_layer=[10, 10],
+                 batch_size=100, num_layers=3, num_units_per_layer=[10, 10],
                  dropout_per_layer=[0.5, 0.5], std_per_layer=[0.005, 0.005],
                  num_output_units=2, dropout_output=0.5, learning_rate=0.01,
                  momentum=0.9, beta1=0.9, beta2=0.999,

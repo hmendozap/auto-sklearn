@@ -70,7 +70,7 @@ class Feed_NN(AutoSklearnClassificationAlgorithm):
                                                        beta2=self.beta2,
                                                        rho=self.rho,
                                                        solver=self.solver,
-                                                       num_epochs=2)
+                                                       num_epochs=3)
         # TODO: Add number of epochs to space?
         self.estimator.fit(X, y)
         return self
@@ -112,7 +112,7 @@ class Feed_NN(AutoSklearnClassificationAlgorithm):
 
         solver_choices = ["adam", "adadelta", "adagrad", "sgd", "momentum", "nesterov"]
 
-        layer_choices = [i for i in range(2, 5)]
+        layer_choices = [i for i in range(2, 7)]
 
         batch_size = UniformIntegerHyperparameter("batch_size", 100, 1000,
                                                   default=100)
@@ -122,27 +122,27 @@ class Feed_NN(AutoSklearnClassificationAlgorithm):
                                                default=3)
 
         num_units_layer_1 = UniformIntegerHyperparameter("num_units_layer_1",
-                                                         10, 256,
+                                                         10, 6144,
                                                          default=10)
 
         num_units_layer_2 = UniformIntegerHyperparameter("num_units_layer_2",
-                                                         10, 256,
+                                                         10, 6144,
                                                          default=10)
 
         num_units_layer_3 = UniformIntegerHyperparameter("num_units_layer_3",
-                                                         10, 256,
+                                                         10, 6144,
                                                          default=10)
 
         num_units_layer_4 = UniformIntegerHyperparameter("num_units_layer_4",
-                                                         10, 256,
+                                                         10, 6144,
                                                          default=10)
 
         num_units_layer_5 = UniformIntegerHyperparameter("num_units_layer_5",
-                                                         10, 256,
+                                                         10, 6144,
                                                          default=10)
 
         num_units_layer_6 = UniformIntegerHyperparameter("num_units_layer_6",
-                                                         10, 256,
+                                                         10, 6144,
                                                          default=10)
 
         dropout_layer_1 = UniformFloatHyperparameter("dropout_layer_1",
