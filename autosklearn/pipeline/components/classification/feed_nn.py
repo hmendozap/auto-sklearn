@@ -14,7 +14,7 @@ from autosklearn.pipeline.implementations import FeedForwardNet
 
 
 class Feed_NN(AutoSklearnClassificationAlgorithm):
-    def __init__(self, batch_size, num_layers, num_units_layer_1,
+    def __init__(self, number_epochs, batch_size, num_layers, num_units_layer_1,
                  num_units_layer_2, num_units_layer_3,num_units_layer_4,
                  num_units_layer_5, num_units_layer_6, dropout_layer_1,
                  dropout_layer_2, dropout_layer_3, dropout_layer_4,
@@ -22,6 +22,7 @@ class Feed_NN(AutoSklearnClassificationAlgorithm):
                  std_layer_1, std_layer_2, std_layer_3, std_layer_4,
                  std_layer_5, std_layer_6, learning_rate, solver,
                  momentum, beta1=0.9, beta2=0.9, rho=0.95, random_state=None):
+        self.number_epochs = number_epochs
         self.batch_size = batch_size
         self.num_layers = num_layers
         self.dropout_output = dropout_output
@@ -70,7 +71,7 @@ class Feed_NN(AutoSklearnClassificationAlgorithm):
                                                        beta2=self.beta2,
                                                        rho=self.rho,
                                                        solver=self.solver,
-                                                       num_epochs=3)
+                                                       num_epochs=self.number_epochs)
         # TODO: Add number of epochs to space?
         self.estimator.fit(X, y)
         return self
@@ -116,6 +117,9 @@ class Feed_NN(AutoSklearnClassificationAlgorithm):
 
         batch_size = UniformIntegerHyperparameter("batch_size", 100, 1000,
                                                   default=100)
+
+        number_epochs = UniformIntegerHyperparameter("number_epochs", 2, 10,
+                                                     default=3)
 
         num_layers = CategoricalHyperparameter("num_layers",
                                                choices=layer_choices,
@@ -199,6 +203,7 @@ class Feed_NN(AutoSklearnClassificationAlgorithm):
         rho = UniformFloatHyperparameter("rho", 0.0, 1.0, default=0.95)
 
         cs = ConfigurationSpace()
+        cs.add_hyperparameter(number_epochs)
         cs.add_hyperparameter(batch_size)
         cs.add_hyperparameter(num_layers)
         cs.add_hyperparameter(num_units_layer_1)
