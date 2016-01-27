@@ -438,8 +438,8 @@ class AutoML(BaseEstimator, multiprocessing.Process):
             self._logger.warning('Metafeatures encoded not calculated')
 
         # == RUN SMAC
-        if (datamanager.info["task"] == BINARY_CLASSIFICATION) or \
-            (datamanager.info["task"] == MULTICLASS_CLASSIFICATION) and \
+        if ((datamanager.info["task"] == BINARY_CLASSIFICATION) or \
+            (datamanager.info["task"] == MULTICLASS_CLASSIFICATION)) and \
                 self.configuration_space is None:
             config = {'balancing:strategy': 'weighting',
                       'classifier:__choice__': 'sgd',
