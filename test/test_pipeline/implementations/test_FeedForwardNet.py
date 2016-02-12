@@ -21,10 +21,8 @@ class TestFeedForwardNet(unittest.TestCase):
         y_test = np.load(dataset_dir + 'unit_test_labels.npy')
 
         # The input shape is using the batch size
-        model = FeedForwardNet(input_shape=(50, 1, 1, 7), batch_size=50, num_epochs=2)
-        # "Correct Shape"
-        X_train = X_train[:, np.newaxis, np.newaxis, :]
-        X_test = X_test[:, np.newaxis, np.newaxis, :]
+        model = FeedForwardNet(input_shape=(50, 7), batch_size=50, num_epochs=2)
+
         model.fit(X_train, y_train)
         print "Model fitted"
 

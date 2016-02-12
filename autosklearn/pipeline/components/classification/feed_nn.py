@@ -12,16 +12,18 @@ from autosklearn.pipeline.components.base import AutoSklearnClassificationAlgori
 from autosklearn.pipeline.constants import *
 from autosklearn.pipeline.implementations import FeedForwardNet
 
+import scipy.sparse as sp
+
 
 class Feed_NN(AutoSklearnClassificationAlgorithm):
     def __init__(self, number_epochs, batch_size, num_layers, num_units_layer_1,
-                 num_units_layer_2, num_units_layer_3,num_units_layer_4,
+                 num_units_layer_2, num_units_layer_3, num_units_layer_4,
                  num_units_layer_5, num_units_layer_6, dropout_layer_1,
                  dropout_layer_2, dropout_layer_3, dropout_layer_4,
                  dropout_layer_5, dropout_layer_6, dropout_output,
                  std_layer_1, std_layer_2, std_layer_3, std_layer_4,
                  std_layer_5, std_layer_6, learning_rate, solver,
-                 momentum, beta1=0.9, beta2=0.9, rho=0.95, random_state=None):
+                 momentum=0.99, beta1=0.9, beta2=0.9, rho=0.95, random_state=None):
         self.number_epochs = number_epochs
         self.batch_size = batch_size
         self.num_layers = num_layers
@@ -47,15 +49,17 @@ class Feed_NN(AutoSklearnClassificationAlgorithm):
         self.batch_size = int(self.batch_size)
 
         self.n_features = X.shape[1]
-        self.input_shape = (self.batch_size, 1, 1, self.n_features)
+        self.input_shape = (self.batch_size, self.n_features)
         num_output_units = len(np.unique(y.astype(int)))
 
+        # Change shape of tensor
         # TODO: Ask Aaron about default shape
-        X = X[:, np.newaxis, np.newaxis, :]
 
         #TODO: Create try-catch statement
         assert len(self.num_units_per_layer) == self.num_layers - 1
         assert len(self.dropout_per_layer) == self.num_layers - 1
+
+        m_issparse = sp.issparse(X)
 
         self.estimator = FeedForwardNet.FeedForwardNet(batch_size=self.batch_size,
                                                        input_shape=self.input_shape,
@@ -71,20 +75,28 @@ class Feed_NN(AutoSklearnClassificationAlgorithm):
                                                        beta2=self.beta2,
                                                        rho=self.rho,
                                                        solver=self.solver,
-                                                       num_epochs=self.number_epochs)
-        # TODO: Add number of epochs to space?
+                                                       num_epochs=self.number_epochs,
+                                                       is_sparse=m_issparse)
         self.estimator.fit(X, y)
         return self
 
     def predict(self, X):
         if self.estimator is None:
             raise NotImplementedError
-        return self.estimator.predict(X)
+        if sp.issparse(X):
+            is_sparse = True
+        else:
+            is_sparse = False
+        return self.estimator.predict(X, is_sparse)
 
     def predict_proba(self, X):
         if self.estimator is None:
             raise NotImplementedError()
-        return self.estimator.predict_proba(X)
+        if sp.issparse(X):
+            is_sparse = True
+        else:
+            is_sparse = False
+        return self.estimator.predict_proba(X, is_sparse)
 
     @staticmethod
     def get_properties(dataset_properties=None):
@@ -94,18 +106,17 @@ class Feed_NN(AutoSklearnClassificationAlgorithm):
                 'handles_nominal_values': False,
                 'handles_numerical_features': True,
                 'prefers_data_scaled': True,
-                # TODO find out if this is good because of sparsity...
                 'prefers_data_normalized': False,
                 'handles_regression': False,
                 'handles_classification': True,
                 'handles_multiclass': True,
                 'handles_multilabel': False,
                 'is_deterministic': True,
-                'handles_sparse': False,
-                'input': (DENSE, UNSIGNED_DATA),
+                'handles_sparse': True,
+                'input': (DENSE, SPARSE, UNSIGNED_DATA),
                 'output': (PREDICTIONS,),
                 # TODO find out what is best used here!
-                # C-continouos and double precision...
+                # Would argue float32
                 'preferred_dtype': None}
 
     @staticmethod
@@ -196,7 +207,7 @@ class Feed_NN(AutoSklearnClassificationAlgorithm):
 
         solver = CategoricalHyperparameter(name="solver",
                                            choices=solver_choices,
-                                           default="sgd")
+                                           default="adagrad")
 
         beta1 = UniformFloatHyperparameter("beta1", 0.01, 1.0, default=0.9)
         beta2 = UniformFloatHyperparameter("beta2", 0.01, 1.0, default=0.9)

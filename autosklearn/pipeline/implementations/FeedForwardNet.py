@@ -1,6 +1,6 @@
 """
 Created on Jul 22, 2015
-Modified on Dec 3, 2015
+Modified on Feb 1, 2016
 
 @author: Aaron Klein
 @modified: Hector Mendoza
@@ -10,15 +10,17 @@ DEBUG = True
 import numpy as np
 import theano
 import theano.tensor as T
+import theano.sparse as S
 import lasagne
 
 
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
-    assert len(inputs) == len(targets)
+    #assert len(inputs) == len(targets)
+    assert inputs.shape[0] == targets.shape[0]
     if shuffle:
-        indices = np.arange(len(inputs))
+        indices = np.arange(inputs.shape[0])
         np.random.shuffle(indices)
-    for start_idx in range(0, len(inputs) - batchsize + 1, batchsize):
+    for start_idx in range(0, inputs.shape[0] - batchsize + 1, batchsize):
         if shuffle:
             excerpt = indices[start_idx:start_idx + batchsize]
         else:
@@ -27,12 +29,12 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 
 
 class FeedForwardNet(object):
-    def __init__(self, input_shape=(100, 1, 1, 28*28),
-                 batch_size=100, num_layers=3, num_units_per_layer=[10, 10],
-                 dropout_per_layer=[0.5, 0.5], std_per_layer=[0.005, 0.005],
+    def __init__(self, input_shape=(100, 28*28),
+                 batch_size=100, num_layers=4, num_units_per_layer=[10, 10, 10],
+                 dropout_per_layer=[0.5, 0.5, 0.5], std_per_layer=[0.005, 0.005, 0.005],
                  num_output_units=2, dropout_output=0.5, learning_rate=0.01,
-                 momentum=0.9, beta1=0.9, beta2=0.999,
-                 rho=0.95, solver="sgd", num_epochs=3):
+                 momentum=0.9, beta1=0.9, beta2=0.9,
+                 rho=0.95, solver="sgd", num_epochs=3, is_sparse=False):
 
         # I don't like the idea that parameters have
         # a default with random values
@@ -51,9 +53,12 @@ class FeedForwardNet(object):
         self.rho = rho
         self.num_epochs = num_epochs
 
-        # TODO: Add correct theano shape constructor - Currently 4-tuple
-        input_var = T.tensor4('inputs')
-        target_var = T.ivector('targets')
+        # TODO: Add correct theano shape constructor
+        if is_sparse:
+            input_var = S.csr_matrix('inputs', dtype='float32')
+        else:
+            input_var = T.dmatrix('inputs')
+        target_var = T.lvector('targets')
         if DEBUG:
             print("... building network")
             print input_shape
@@ -102,7 +107,7 @@ class FeedForwardNet(object):
                                               learning_rate=self.learning_rate)
         elif solver == "sgd":
             updates = lasagne.updates.sgd(loss, params,
-                                         learning_rate=self.learning_rate)
+                                          learning_rate=self.learning_rate)
         elif solver == "momentum":
             updates = lasagne.updates.momentum(loss, params,
                                                learning_rate=self.learning_rate,
@@ -114,7 +119,7 @@ class FeedForwardNet(object):
         # valid_prediction = lasagne.layers.get_output(self.network,
                                                      # deterministic=True)
 
-        # valid_loss = lasagne.objectives.categorical_crossentropy(
+        # valid_loss = lasagne.objectives.categorical_accuracy(
                                                         # valid_prediction,
                                                         # target_var)
         # valid_loss = valid_loss.mean()
@@ -143,13 +148,15 @@ class FeedForwardNet(object):
                 inputs, targets = batch
                 train_err += self.train_fn(inputs, targets)
                 train_batches += 1
-            # learning_curve[epoch] = (val_acc / float(val_batches) * 100)
+            print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
         return self
 
-    def predict(self, X):
-        pred = self.predict_proba(X)
+    def predict(self, X, is_sparse=False):
+        pred = self.predict_proba(X, is_sparse)
         return np.argmax(pred, axis=1)
 
-    def predict_proba(self, X):
+    def predict_proba(self, X, is_sparse=False):
+        if is_sparse:
+            X = S.basic.as_sparse_or_tensor_variable(X)
         predictions = lasagne.layers.get_output(self.network, X, deterministic=True).eval()
         return predictions
