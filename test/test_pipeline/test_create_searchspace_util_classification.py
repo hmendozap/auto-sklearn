@@ -3,8 +3,8 @@ from collections import OrderedDict
 import unittest
 import numpy
 
-from HPOlibConfigSpace.configuration_space import ConfigurationSpace
-from HPOlibConfigSpace.hyperparameters import CategoricalHyperparameter
+from ConfigSpace.configuration_space import ConfigurationSpace
+from ConfigSpace.hyperparameters import CategoricalHyperparameter
 
 from autosklearn.pipeline.components.classification.liblinear_svc import LibLinear_SVC
 from autosklearn.pipeline.components.classification.lda import LDA
@@ -17,6 +17,7 @@ from autosklearn.pipeline.components.feature_preprocessing.random_trees_embeddin
 import autosklearn.pipeline.create_searchspace_util
 
 class TestCreateClassificationSearchspace(unittest.TestCase):
+    _multiprocess_can_split_ = True
 
     def test_get_match_array_sparse_and_dense(self):
         # preproc is empty

@@ -76,9 +76,9 @@ class AutoSklearnClassificationAlgorithm(object):
     def get_properties(dataset_properties=None):
         """Get the properties of the underlying algorithm.
 
-         Find more information at :ref:`get_properties`
+        Find more information at :ref:`get_properties`
 
-        Paramaters
+        Parameters
         ----------
 
         dataset_properties : dict, optional (default=None)
@@ -93,14 +93,14 @@ class AutoSklearnClassificationAlgorithm(object):
     def get_hyperparameter_search_space(dataset_properties=None):
         """Return the configuration space of this classification algorithm.
 
-        Paramaters
+        Parameters
         ----------
 
         dataset_properties : dict, optional (default=None)
 
         Returns
         -------
-        HPOlibConfigspace.configuration_space.ConfigurationSpace
+        Configspace.configuration_space.ConfigurationSpace
             The configuration space of this classification algorithm.
         """
         raise NotImplementedError()
@@ -188,9 +188,9 @@ class AutoSklearnPreprocessingAlgorithm(object):
     def get_properties(dataset_properties=None):
         """Get the properties of the underlying algorithm.
 
-         Find more information at :ref:`get_properties`
+        Find more information at :ref:`get_properties`
 
-        Paramaters
+        Parameters
         ----------
 
         dataset_properties : dict, optional (default=None)
@@ -205,14 +205,14 @@ class AutoSklearnPreprocessingAlgorithm(object):
     def get_hyperparameter_search_space(dataset_properties=None):
         """Return the configuration space of this preprocessing algorithm.
 
-        Paramaters
+        Parameters
         ----------
 
         dataset_properties : dict, optional (default=None)
 
         Returns
         -------
-        HPOlibConfigspace.configuration_space.ConfigurationSpace
+        Configspace.configuration_space.ConfigurationSpace
             The configuration space of this preprocessing algorithm.
         """
         raise NotImplementedError()
@@ -287,9 +287,9 @@ class AutoSklearnRegressionAlgorithm(object):
     def get_properties(dataset_properties=None):
         """Get the properties of the underlying algorithm.
 
-         Find more information at :ref:`get_properties`
+        Find more information at :ref:`get_properties`
 
-        Paramaters
+        Parameters
         ----------
 
         dataset_properties : dict, optional (default=None)
@@ -304,14 +304,14 @@ class AutoSklearnRegressionAlgorithm(object):
     def get_hyperparameter_search_space(dataset_properties=None):
         """Return the configuration space of this regression algorithm.
 
-        Paramaters
+        Parameters
         ----------
 
         dataset_properties : dict, optional (default=None)
 
         Returns
         -------
-        HPOlibConfigspace.configuration_space.ConfigurationSpace
+        Configspace.configuration_space.ConfigurationSpace
             The configuration space of this regression algorithm.
         """
         raise NotImplementedError()

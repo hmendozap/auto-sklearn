@@ -1,8 +1,9 @@
 # -*- encoding: utf-8 -*-
 from __future__ import print_function
 
-import sklearn.datasets
 import numpy as np
+import sklearn.datasets
+import sklearn.metrics
 
 import autosklearn.classification
 
@@ -24,7 +25,10 @@ def main():
         tmp_folder='/tmp/autoslearn_example_tmp',
         output_folder='/tmp/autosklearn_example_out')
     automl.fit(X_train, y_train, dataset_name='digits')
-    print(automl.score(X_test, y_test))
+
+    print(automl.show_models())
+    predictions = automl.predict(X_test)
+    print("Accuracy score", sklearn.metrics.accuracy_score(y_test, predictions))
 
 
 if __name__ == '__main__':

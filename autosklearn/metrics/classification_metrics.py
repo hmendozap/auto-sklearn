@@ -15,8 +15,14 @@ from autosklearn.metrics.util import log_loss, prior_log_loss, \
 
 
 def calculate_score(metric, solution, prediction, task):
+    if solution.shape[0] != prediction.shape[0]:
+        raise ValueError('Solution and prediction have different number of '
+                         'samples: %d and %d' % (solution.shape[0],
+                                                 prediction.shape[0]))
+
     metric = METRIC_TO_STRING[metric]
     return globals()[metric](solution, prediction, task)
+
 
 
 def acc_metric(solution, prediction, task=BINARY_CLASSIFICATION):
@@ -86,13 +92,14 @@ def acc_metric(solution, prediction, task=BINARY_CLASSIFICATION):
                 dtype=float)
     # Bounding to avoid division by 0, 1e-7 because of float32
     eps = np.float(1e-7)
+    """
     tp = np.sum(tp)
     fp = np.sum(fp)
     tn = np.sum(tn)
     fn = np.sum(fn)
-
+   """
     if task in (BINARY_CLASSIFICATION, MULTILABEL_CLASSIFICATION):
-        accuracy = (np.sum(tp) + np.sum(tn)) / (
+       accuracy = (np.sum(tp) + np.sum(tn)) / (
             np.sum(tp) + np.sum(fp) + np.sum(tn) + np.sum(fn)
         )
     elif task == MULTICLASS_CLASSIFICATION:

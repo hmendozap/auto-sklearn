@@ -73,10 +73,17 @@ class EstimatorTest(Base):
                                 X=X, y=y, feat_type=[True])
 
         self.assertRaisesRegexp(ValueError,
-                                'Array feat_type must only contain bools.',
+                                'Array feat_type must only contain strings.',
+                                cls.fit,
+                                X=X, y=y, feat_type=[True]*100)
+
+        self.assertRaisesRegexp(ValueError,
+                                'Only `Categorical` and `Numerical` are '
+                                'valid feature types, you passed `Car`',
                                 cls.fit,
                                 X=X, y=y, feat_type=['Car']*100)
 
+    @unittest.skip("pSMAC not yet working with new python SMAC")
     def test_fit_pSMAC(self):
         output = os.path.join(self.test_dir, '..', '.tmp_estimator_fit_pSMAC')
         self._setUp(output)
@@ -131,7 +138,7 @@ class EstimatorTest(Base):
         score = automl.score(X_test, Y_test)
 
         self.assertEqual(len(os.listdir(os.path.join(output, '.auto-sklearn',
-                                                     'ensemble_indices'))), 1)
+                                                     'ensembles'))), 1)
         self.assertGreaterEqual(score, 0.90)
         self.assertEqual(automl._task, MULTICLASS_CLASSIFICATION)
 

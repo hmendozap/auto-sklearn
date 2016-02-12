@@ -1,10 +1,8 @@
-import numpy as np
-
 from autosklearn.pipeline.implementations.MultilabelClassifier import \
     MultilabelClassifier
 
-from HPOlibConfigSpace.configuration_space import ConfigurationSpace
-from HPOlibConfigSpace.hyperparameters import UniformFloatHyperparameter, \
+from ConfigSpace.configuration_space import ConfigurationSpace
+from ConfigSpace.hyperparameters import UniformFloatHyperparameter, \
     UniformIntegerHyperparameter, CategoricalHyperparameter
 
 from autosklearn.pipeline.components.base import AutoSklearnClassificationAlgorithm
@@ -25,7 +23,6 @@ class AdaboostClassifier(AutoSklearnClassificationAlgorithm):
     def fit(self, X, Y, sample_weight=None):
         import sklearn.ensemble
         import sklearn.tree
-        import sklearn.multiclass
 
         self.n_estimators = int(self.n_estimators)
         self.learning_rate = float(self.learning_rate)

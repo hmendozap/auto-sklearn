@@ -5,10 +5,14 @@ from itertools import product
 import numpy as np
 from sklearn.base import RegressorMixin
 
-from HPOlibConfigSpace.forbidden import ForbiddenEqualsClause, ForbiddenAndConjunction
-from HPOlibConfigSpace.configuration_space import ConfigurationSpace
+from ConfigSpace.forbidden import ForbiddenEqualsClause, ForbiddenAndConjunction
+from ConfigSpace.configuration_space import ConfigurationSpace
 
-from autosklearn.pipeline import components as components
+from autosklearn.pipeline.components import regression as regression_components
+from autosklearn.pipeline.components import data_preprocessing as \
+    data_preprocessing_components
+from autosklearn.pipeline.components import  feature_preprocessing as \
+    feature_preprocessing_components
 from autosklearn.pipeline.base import BasePipeline
 from autosklearn.pipeline.constants import SPARSE
 
@@ -24,11 +28,11 @@ class SimpleRegressionPipeline(RegressorMixin, BasePipeline):
     possible parameters in the __init__ function because we only know the
     available regressors at runtime. For this reason the user must
     specifiy the parameters by passing an instance of
-    HPOlibConfigSpace.configuration_space.Configuration.
+    ConfigSpace.configuration_space.Configuration.
 
     Parameters
     ----------
-    configuration : HPOlibConfigSpace.configuration_space.Configuration
+    configuration : ConfigSpace.configuration_space.Configuration
         The configuration to evaluate.
 
     random_state : int, RandomState instance or None, optional (default=None)
@@ -143,7 +147,7 @@ class SimpleRegressionPipeline(RegressorMixin, BasePipeline):
 
         Returns
         -------
-        cs : HPOlibConfigSpace.configuration_space.Configuration
+        cs : ConfigSpace.configuration_space.Configuration
             The configuration space describing the SimpleRegressionClassifier.
         """
         cs = ConfigurationSpace()
@@ -238,7 +242,7 @@ class SimpleRegressionPipeline(RegressorMixin, BasePipeline):
 
     @staticmethod
     def _get_estimator_components():
-        return components.regression_components._regressors
+        return regression_components._regressors
 
     @classmethod
     def _get_pipeline(cls):
@@ -247,19 +251,19 @@ class SimpleRegressionPipeline(RegressorMixin, BasePipeline):
         # Add the always active preprocessing components
         steps.extend(
             [["one_hot_encoding",
-              components.data_preprocessing._preprocessors['one_hot_encoding']],
+              data_preprocessing_components._preprocessors['one_hot_encoding']],
             ["imputation",
-              components.data_preprocessing._preprocessors['imputation']],
+             data_preprocessing_components._preprocessors['imputation']],
              ["rescaling",
-              components.data_preprocessing._preprocessors['rescaling']]])
+              data_preprocessing_components._preprocessors['rescaling']]])
 
         # Add the preprocessing component
         steps.append(['preprocessor',
-                      components.feature_preprocessing.FeaturePreprocessorChoice])
+                      feature_preprocessing_components.FeaturePreprocessorChoice])
 
         # Add the classification component
         steps.append(['regressor',
-                      components.regression_components.RegressorChoice])
+                      regression_components.RegressorChoice])
         return steps
 
     def _get_estimator_hyperparameter_name(self):

@@ -2,10 +2,10 @@ import warnings
 
 import numpy as np
 
-from HPOlibConfigSpace.configuration_space import ConfigurationSpace
-from HPOlibConfigSpace.hyperparameters import CategoricalHyperparameter, \
+from ConfigSpace.configuration_space import ConfigurationSpace
+from ConfigSpace.hyperparameters import CategoricalHyperparameter, \
     UniformIntegerHyperparameter, UniformFloatHyperparameter
-from HPOlibConfigSpace.conditions import EqualsCondition, InCondition
+from ConfigSpace.conditions import EqualsCondition, InCondition
 
 from autosklearn.pipeline.components.base import \
     AutoSklearnPreprocessingAlgorithm
@@ -47,6 +47,11 @@ class KernelPCA(AutoSklearnPreprocessingAlgorithm):
         with warnings.catch_warnings():
             warnings.filterwarnings("error")
             X_new = self.preprocessor.transform(X)
+
+            # TODO write a unittest for this case
+            if X_new.shape[1] == 0:
+                raise ValueError("KernelPCA removed all features!")
+
             return X_new
 
     @staticmethod

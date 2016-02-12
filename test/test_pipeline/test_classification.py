@@ -13,9 +13,9 @@ import sklearn.ensemble
 import sklearn.svm
 from sklearn.utils.testing import assert_array_almost_equal
 
-from HPOlibConfigSpace.configuration_space import ConfigurationSpace, \
+from ConfigSpace.configuration_space import ConfigurationSpace, \
     Configuration
-from HPOlibConfigSpace.hyperparameters import CategoricalHyperparameter
+from ConfigSpace.hyperparameters import CategoricalHyperparameter
 
 from autosklearn.pipeline.classification import SimpleClassificationPipeline
 from autosklearn.pipeline.components.base import \
@@ -65,6 +65,8 @@ class DummyPreprocessor(AutoSklearnPreprocessingAlgorithm):
 
 
 class SimpleClassificationPipelineTest(unittest.TestCase):
+    _multiprocess_can_split_ = True
+
     def test_io_dict(self):
         classifiers = classification_components._classifiers
         for c in classifiers:
@@ -135,7 +137,7 @@ class SimpleClassificationPipelineTest(unittest.TestCase):
         print(cs)
         cs.seed(5)
 
-        for i in range(50):
+        for i in range(10):
             X, Y = sklearn.datasets.\
                     make_multilabel_classification(n_samples=150,
                                                    n_features=20,
@@ -153,11 +155,12 @@ class SimpleClassificationPipelineTest(unittest.TestCase):
             Y_test = Y[101:, ]
 
             config = cs.sample_configuration()
-            config._populate_values()
 
-            if 'classifier:passive_aggressive:n_iter' in config:
+            if 'classifier:passive_aggressive:n_iter' in config and \
+                    config['classifier:passive_aggressive:n_iter'] is not None:
                 config._values['classifier:passive_aggressive:n_iter'] = 5
-            if 'classifier:sgd:n_iter' in config:
+            if 'classifier:sgd:n_iter' in config and \
+                    config['classifier:sgd:n_iter'] is not None:
                 config._values['classifier:sgd:n_iter'] = 5
 
             cls = SimpleClassificationPipeline(config, random_state=1)
@@ -217,9 +220,12 @@ class SimpleClassificationPipelineTest(unittest.TestCase):
         for i in range(10):
             config = cs.sample_configuration()
             config._populate_values()
-            if config['classifier:passive_aggressive:n_iter'] is not None:
+
+            if 'classifier:passive_aggressive:n_iter' in config and \
+                    config['classifier:passive_aggressive:n_iter'] is not None:
                 config._values['classifier:passive_aggressive:n_iter'] = 5
-            if config['classifier:sgd:n_iter'] is not None:
+            if 'classifier:sgd:n_iter' in config and \
+                    config['classifier:sgd:n_iter'] is not None:
                 config._values['classifier:sgd:n_iter'] = 5
 
             X_train, Y_train, X_test, Y_test = get_dataset(dataset='digits')
@@ -282,9 +288,11 @@ class SimpleClassificationPipelineTest(unittest.TestCase):
         for i in range(10):
             config = cs.sample_configuration()
             config._populate_values()
-            if config['classifier:passive_aggressive:n_iter'] is not None:
+            if 'classifier:passive_aggressive:n_iter' in config and \
+                    config['classifier:passive_aggressive:n_iter'] is not None:
                 config._values['classifier:passive_aggressive:n_iter'] = 5
-            if config['classifier:sgd:n_iter'] is not None:
+            if 'classifier:sgd:n_iter' in config and \
+                    config['classifier:sgd:n_iter'] is not None:
                 config._values['classifier:sgd:n_iter'] = 5
 
             X_train, Y_train, X_test, Y_test = get_dataset(dataset='digits')
@@ -341,9 +349,11 @@ class SimpleClassificationPipelineTest(unittest.TestCase):
         for i in range(10):
             config = cs.sample_configuration()
             config._populate_values()
-            if config['classifier:passive_aggressive:n_iter'] is not None:
+            if 'classifier:passive_aggressive:n_iter' in config and \
+                    config['classifier:passive_aggressive:n_iter'] is not None:
                 config._values['classifier:passive_aggressive:n_iter'] = 5
-            if config['classifier:sgd:n_iter'] is not None:
+            if 'classifier:sgd:n_iter' in config and \
+                    config['classifier:sgd:n_iter'] is not None:
                 config._values['classifier:sgd:n_iter'] = 5
 
             print(config)
@@ -393,9 +403,11 @@ class SimpleClassificationPipelineTest(unittest.TestCase):
         for i in range(10):
             config = cs.sample_configuration()
             config._populate_values()
-            if config['classifier:passive_aggressive:n_iter'] is not None:
+            if 'classifier:passive_aggressive:n_iter' in config and \
+                    config['classifier:passive_aggressive:n_iter'] is not None:
                 config._values['classifier:passive_aggressive:n_iter'] = 5
-            if config['classifier:sgd:n_iter'] is not None:
+            if 'classifier:sgd:n_iter' in config and \
+                    config['classifier:sgd:n_iter'] is not None:
                 config._values['classifier:sgd:n_iter'] = 5
 
             print(config)
@@ -516,7 +528,7 @@ class SimpleClassificationPipelineTest(unittest.TestCase):
                                          'preprocessor': ['densifier']},
                                 dataset_properties={'sparse': True})
 
-    @unittest.skip("Wait until HPOlibConfigSpace is fixed.")
+    @unittest.skip("Wait until ConfigSpace is fixed.")
     def test_get_hyperparameter_search_space_dataset_properties(self):
         cs_mc = SimpleClassificationPipeline.get_hyperparameter_search_space(
             dataset_properties={'multiclass': True})
