@@ -3,6 +3,7 @@ import importlib
 import inspect
 import pkgutil
 import sys
+import os
 
 
 def find_components(package, directory, base_class):
@@ -59,6 +60,17 @@ class ThirdPartyComponents(object):
                 raise ValueError('Property %s not specified for algorithm %s')
 
         self.components[name] = classifier
+
+        # TODO: Add exception statement wheter one can import component
+        try:
+            component_src = inspect.getsourcefile(classifier)
+            # Get the path of where the component is stored
+            os.environ['PYTHONPATH'] = component_src.rsplit('/', 1)[0] + os.pathsep + \
+                                    os.environ['PYTHONPATH']
+            sys.path.insert(0, component_src.rsplit('/', 1)[0])
+        except TypeError as E:
+            raise TypeError('Cannot import component %s if already builtin' % E)
+
         print(name, classifier)
 
 

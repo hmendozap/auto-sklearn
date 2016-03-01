@@ -211,7 +211,7 @@ class AbstractEvaluator(object):
             self.duration = time.time() - self.starttime
             print(traceback.format_exc())
             self._output_SMAC_string(self.duration, 2.0, self.seed,
-                'No results were produced! Error is %s' % str(e))
+                                     'No results were produced! Error is %s' % str(e))
 
     def _output_SMAC_string(self, duration, loss, seed, additional_run_info):
         print('Result for ParamILS: %s, %f, 1, %f, %d, %s' %
@@ -223,8 +223,8 @@ class AbstractEvaluator(object):
 
         if self.Y_optimization.shape[0] != Y_optimization_pred.shape[0]:
             return 2, "Targets %s and prediction %s don't have the same " \
-            "length. Probably training didn't finish" % (
-                self.Y_optimization.shape, Y_optimization_pred.shape)
+                      "length. Probably training didn't finish" % (
+                       self.Y_optimization.shape, Y_optimization_pred.shape)
 
         num_run = str(self.num_run).zfill(5)
         if os.path.exists(self.backend.get_model_dir()):

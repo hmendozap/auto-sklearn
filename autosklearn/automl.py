@@ -257,6 +257,8 @@ class AutoML(BaseEstimator, multiprocessing.Process):
                                             metric=metric,
                                             feat_type=feat_type,
                                             dataset_name=dataset_name,
+                                            includes=[self._include_estimators,
+                                                      self._include_preprocessors],
                                             encode_labels=False)
 
         return self._fit(loaded_data_manager)
@@ -377,8 +379,8 @@ class AutoML(BaseEstimator, multiprocessing.Process):
             self._backend,
             self._stopwatch,
             self._logger,
-            self._include_estimators,
-            self._include_preprocessors)
+            datamanager.includes[0],
+            datamanager.includes[1])
         self.configuration_space_created_hook(datamanager)
 
         # == RUN ensemble builder
