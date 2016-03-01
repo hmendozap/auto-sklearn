@@ -44,11 +44,17 @@ class ClassifierChoice(object):
         if include is not None and exclude is not None:
             raise ValueError("The argument include and exclude cannot be used together.")
 
+        # TODO: Add test for base_interface loading
         if include is not None:
             for incl in include:
                 if incl not in available_comp:
-                    raise ValueError("Trying to include unknown component: "
-                                     "%s" % incl)
+                    try:
+                        kls = __import__(incl)
+                        _addons.add_component(getattr(kls, incl))
+                    except Exception,  E:
+                        print('Exception: ', E)
+                        raise ValueError("Trying to include unknown component: "
+                                         "%s" % incl)
 
         for name in available_comp:
             if include is not None and name not in include:

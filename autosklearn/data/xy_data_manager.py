@@ -12,7 +12,7 @@ from autosklearn.data.abstract_data_manager import AbstractDataManager
 class XYDataManager(AbstractDataManager):
 
     def __init__(self, data_x, y, task, metric, feat_type, dataset_name,
-                 encode_labels):
+                 includes, encode_labels):
         super(XYDataManager, self).__init__(dataset_name)
 
         if isinstance(task, six.string_types):
@@ -59,6 +59,8 @@ class XYDataManager(AbstractDataManager):
             raise ValueError('X and feat type must have the same dimensions, '
                              'but are %d and %d.' %
                              (data_x.shape[1], len(self.feat_type)))
+
+        self.includes = includes
 
         if encode_labels:
             self.perform1HotEncoding()

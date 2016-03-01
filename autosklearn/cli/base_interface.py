@@ -190,7 +190,10 @@ def main(dataset_info, mode, seed, params,
                 except Exception:
                     pass
 
-        cs = get_configuration_space(D.info)
+        # TODO: To inform SMAC runs that external components are included
+        cs = get_configuration_space(D.info,
+                                     include_estimators=D.includes[0],
+                                     include_preprocessors=D.includes[1])
         configuration = configuration_space.Configuration(cs, params)
     else:
         configuration = None
