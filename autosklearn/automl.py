@@ -71,6 +71,18 @@ def _calculate_metafeatures_encoded(basename, x_train, y_train, watcher,
     return result
 
 
+def _load_search_space(tmp_dir, backend, watcher, logger,
+                       configuration_space_file):
+    task_name = 'LoadConfigSpace'
+    logger.info('Started to load a predefined configuration space')
+    watcher.start_task(task_name)
+    with open(configuration_space_file) as fh:
+        cs = pcs_parser.read(fh)
+    watcher.stop_task(task_name)
+    configuration_path = os.path.abspath(configuration_space_file)
+    return cs, configuration_path
+
+
 def _create_search_space(tmp_dir, data_info, backend, watcher, logger,
                          include_estimators=None, include_preprocessors=None):
     task_name = 'CreateConfigSpace'
@@ -148,6 +160,7 @@ class AutoML(BaseEstimator, multiprocessing.Process):
                  include_preprocessors=None,
                  resampling_strategy='holdout-iterative-fit',
                  resampling_strategy_arguments=None,
+                 fixed_configuration_space=None,
                  delete_tmp_folder_after_terminate=False,
                  delete_output_folder_after_terminate=False,
                  shared_mode=False,
@@ -172,6 +185,7 @@ class AutoML(BaseEstimator, multiprocessing.Process):
         self._include_preprocessors = include_preprocessors
         self._resampling_strategy = resampling_strategy
         self._resampling_strategy_arguments = resampling_strategy_arguments
+        self._fixed_cs = fixed_configuration_space
         self.delete_tmp_folder_after_terminate = \
             delete_tmp_folder_after_terminate
         self.delete_output_folder_after_terminate = \
@@ -259,7 +273,8 @@ class AutoML(BaseEstimator, multiprocessing.Process):
                                             dataset_name=dataset_name,
                                             includes=[self._include_estimators,
                                                       self._include_preprocessors],
-                                            encode_labels=False)
+                                            encode_labels=False,
+                                            fixed_cs=self._fixed_cs)
 
         return self._fit(loaded_data_manager)
 
@@ -366,21 +381,30 @@ class AutoML(BaseEstimator, multiprocessing.Process):
         if self._resampling_strategy in ['holdout', 'holdout-iterative-fit']:
             self._do_dummy_prediction(datamanager)
 
-        # = Create a searchspace
-        # Do this before One Hot Encoding to make sure that it creates a
-        # search space for a dense classifier even if one hot encoding would
-        # make it sparse (tradeoff; if one hot encoding would make it sparse,
-        #  densifier and truncatedSVD would probably lead to a MemoryError,
-        # like this we can't use some of the preprocessing methods in case
-        # the data became sparse)
-        self.configuration_space, configspace_path = _create_search_space(
-            self._tmp_dir,
-            datamanager.info,
-            self._backend,
-            self._stopwatch,
-            self._logger,
-            datamanager.includes[0],
-            datamanager.includes[1])
+        # Receive a predefined configuration space from file
+        if datamanager.fixed_cs is not None:
+            self.configuration_space, configspace_path = _load_search_space(
+                self._tmp_dir,
+                self._backend,
+                self._stopwatch,
+                self._logger,
+                self._fixed_cs)
+        else:
+            # Create a searchspace
+            # Do this before One Hot Encoding to make sure that it creates a
+            # search space for a dense classifier even if one hot encoding would
+            # make it sparse (tradeoff; if one hot encoding would make it sparse,
+            #  densifier and truncatedSVD would probably lead to a MemoryError,
+            # like this we can't use some of the preprocessing methods in case
+            # the data became sparse)
+            self.configuration_space, configspace_path = _create_search_space(
+                self._tmp_dir,
+                datamanager.info,
+                self._backend,
+                self._stopwatch,
+                self._logger,
+                datamanager.includes[0],
+                datamanager.includes[1])
         self.configuration_space_created_hook(datamanager)
 
         # == RUN ensemble builder

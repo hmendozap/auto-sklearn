@@ -6,6 +6,7 @@ import signal
 import time
 
 from HPOlibConfigSpace import configuration_space
+from HPOlibConfigSpace.converters import pcs_parser
 
 from autosklearn.data.abstract_data_manager import AbstractDataManager
 from autosklearn.data.competition_data_manager import CompetitionDataManager
@@ -115,6 +116,7 @@ def make_mode_cv(data, seed, configuration, num_run, folds, output_dir):
     loss, opt_pred, valid_pred, test_pred = evaluator.fit_predict_and_loss()
     evaluator.finish_up(loss, opt_pred, valid_pred, test_pred)
 
+
 def make_mode_partial_cv(data, seed, configuration, num_run, metric, fold,
                          folds, output_dir):
     global evaluator
@@ -190,10 +192,14 @@ def main(dataset_info, mode, seed, params,
                 except Exception:
                     pass
 
-        # TODO: To inform SMAC runs that external components are included
+        #if D.fixed_cs is not None:
+        #    with open(D.fixed_cs) as fh:
+        #        cs = pcs_parser.read(fh)
+        #else:
         cs = get_configuration_space(D.info,
-                                     include_estimators=D.includes[0],
-                                     include_preprocessors=D.includes[1])
+                                         include_estimators=D.includes[0],
+                                         include_preprocessors=D.includes[1])
+
         configuration = configuration_space.Configuration(cs, params)
     else:
         configuration = None
