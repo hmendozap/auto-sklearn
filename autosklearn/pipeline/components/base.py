@@ -33,7 +33,7 @@ class ThirdPartyComponents(object):
         self.components = OrderedDict()
 
     def add_component(self, obj):
-        if inspect.isclass(obj) and self.base_class in obj.__bases__:
+        if inspect.isclass(obj) and self.base_class in inspect.getmro(obj):
             name = obj.__name__
             classifier = obj
         else:
@@ -41,14 +41,13 @@ class ThirdPartyComponents(object):
                             str(self.base_class))
 
         properties = set(classifier.get_properties())
-        should_be_there = set(['shortname',
-                               'name',
-                               'handles_regression',
-                               'handles_classification',
-                               'handles_multiclass',
-                               'handles_multilabel',
-                               'is_deterministic',
-                               'input', 'output'])
+        should_be_there = {'shortname', 'name',
+                           'handles_regression',
+                           'handles_classification',
+                           'handles_multiclass',
+                           'handles_multilabel',
+                           'is_deterministic',
+                           'input', 'output'}
         for property in properties:
             if property not in should_be_there:
                 raise ValueError('Property %s must not be specified for '
