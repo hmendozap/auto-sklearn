@@ -14,6 +14,7 @@ import pkg_resources
 import psutil
 
 import autosklearn.automl
+from autosklearn.pipeline.components.classification import add_classifier
 from autosklearn.data.data_manager_factory import \
     populate_argparse_with_data_options
 from autosklearn.util.smac import populate_argparse_with_resampling_arguments, \
@@ -169,6 +170,9 @@ if __name__ == '__main__':
 
     resampling_strategy, resampling_strategy_arguments = \
         namespace_to_automl_format(args)
+
+    import DeepFeedNet
+    add_classifier(DeepFeedNet.DeepFeedNet)
 
     time_spent_so_far = time.time() - start_time
     time_left_for_smac = time_limit - time_spent_so_far

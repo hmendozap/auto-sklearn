@@ -6,7 +6,6 @@ from autosklearn.data.arff_data_manager import ARFFDataManager
 from autosklearn.constants import *
 
 
-
 def get_data_manager(namespace, encode_labels=False):
     """Get a dataset from a argparse.Namespace.
 
@@ -33,6 +32,8 @@ def get_data_manager(namespace, encode_labels=False):
                                encode_labels=encode_labels)
     elif data_format_ == 'automlcompetitionformat':
         return CompetitionDataManager(namespace.dataset,
+                                      includes=[namespace.include_estimators,
+                                                namespace.include_preprocessors],
                                       encode_labels=encode_labels)
     else:
         raise NotImplemented('Data format %s not supported.' % data_format)

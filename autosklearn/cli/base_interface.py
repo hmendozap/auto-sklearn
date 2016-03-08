@@ -192,13 +192,14 @@ def main(dataset_info, mode, seed, params,
                 except Exception:
                     pass
 
+        # Compare two floats with cmath.isclose
         #if D.fixed_cs is not None:
         #    with open(D.fixed_cs) as fh:
         #        cs = pcs_parser.read(fh)
         #else:
         cs = get_configuration_space(D.info,
-                                         include_estimators=D.includes[0],
-                                         include_preprocessors=D.includes[1])
+                                     include_estimators=D.includes[0],
+                                     include_preprocessors=D.includes[1])
 
         configuration = configuration_space.Configuration(cs, params)
     else:

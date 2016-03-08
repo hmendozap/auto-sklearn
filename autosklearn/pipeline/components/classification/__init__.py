@@ -48,8 +48,11 @@ class ClassifierChoice(object):
         if include is not None:
             for incl in include:
                 if incl not in available_comp:
+                    # TODO: Try to add a finder function for component's modules.
+                    # TODO: Based on 10.11 Python Cookbook
                     try:
-                        kls = __import__(incl)
+                        import importlib
+                        kls = importlib.import_module(incl)
                         _addons.add_component(getattr(kls, incl))
                     except Exception,  E:
                         print('Exception: ', E)

@@ -157,7 +157,7 @@ def load_labels(filename):
 
 
 class CompetitionDataManager(AbstractDataManager):
-    def __init__(self, name, encode_labels=True, max_memory_in_mb=1048576):
+    def __init__(self, name, includes=(None, None), encode_labels=True, max_memory_in_mb=1048576):
         """ max_memory_size in Mb """
         if name.endswith("/"):
             name = name[:-1]
@@ -214,6 +214,8 @@ class CompetitionDataManager(AbstractDataManager):
                 self.data['Y_test'] = self.load_label(p, self.info['test_num'])
             except (IOError, OSError):
                 pass
+
+        self.includes = includes
 
         if encode_labels:
             self.perform1HotEncoding()
