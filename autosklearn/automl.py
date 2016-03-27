@@ -524,7 +524,7 @@ class AutoML(BaseEstimator, multiprocessing.Process):
         except Exception:
             pass
 
-        if self._queue is None:
+        if self._queue is None and self._keep_models is True:
             self._load_models()
 
         return self
