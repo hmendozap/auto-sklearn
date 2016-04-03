@@ -21,7 +21,7 @@ sys.path.append(os.path.dirname(__file__))
 from base import Base
 
 class AutoMLTest(Base, unittest.TestCase):
-    _multiprocess_can_split_ = True
+    _multiprocess_can_split_ = False
 
     def test_fit(self):
         if self.travis:
@@ -80,12 +80,16 @@ class AutoMLTest(Base, unittest.TestCase):
         data_manager_file = os.path.join(output, '.auto-sklearn',
                                          'datamanager.pkl')
 
-        queue = multiprocessing.Queue()
+        queue = multiprocessing.Queue(1)
         auto = autosklearn.automl.AutoML(
-            output, output, 15, 15,
-            initial_configurations_via_metalearning=25,
+            output, output, 150, 90,
+            initial_configurations_via_metalearning=5,
             queue=queue,
-            seed=100)
+            seed=100,
+            resampling_strategy='holdout',
+            include_estimators=['DeepFeedNet'],
+            include_preprocessors=['no_preprocessing'],
+            max_iter_smac=5)
         auto.fit_automl_dataset(dataset)
 
         # pickled data manager (without one hot encoding!)

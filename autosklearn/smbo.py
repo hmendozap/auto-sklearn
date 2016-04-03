@@ -454,14 +454,15 @@ class AutoMLSMBO(multiprocessing.Process):
             return res
     
     def run(self):
+        cpname = multiprocessing.current_process().name
+        self.logger.info("{0} is currently ... ". format(cpname))
         # we use pynisher here to enforce limits
         safe_smbo = pynisher.enforce_limits(mem_in_mb=self.memory_limit,
                                             wall_time_in_s=int(self.total_walltime_limit),
                                             grace_period_in_s=5)(self.run_smbo)
-        safe_smbo(max_iters = self.smac_iters)
+        safe_smbo(max_iters=self.smac_iters)
         
-
-    def run_smbo(self, max_iters=1000):
+    def run_smbo(self, max_iters=10):
         global evaluator
 
         # == first things first: load the datamanager
@@ -635,7 +636,7 @@ class AutoMLSMBO(multiprocessing.Process):
                                  self.func_eval_time_limit)
                 self.logger.info(next_config)
                 self.reset_data_manager()
-                info = eval_with_limits(self.datamanager, self.tmp_dir, config,
+                info = eval_with_limits(self.datamanager, self.tmp_dir, next_config,
                                         seed, num_run,
                                         self.resampling_strategy,
                                         self.resampling_strategy_args,

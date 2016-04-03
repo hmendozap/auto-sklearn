@@ -173,27 +173,27 @@ if __name__ == '__main__':
     BUFFER_BEFORE_SENDING_SIGTERM = 30  # We send SIGTERM to all processes
     DELAY_TO_SIGKILL = 15  # And after a delay we send a sigkill
 
-    resampling_strategy, resampling_strategy_arguments = \
-        namespace_to_automl_format(args)
+    resampling_strategy = 'holdout'
+    resampling_strategy_arguments = None
 
     time_spent_so_far = time.time() - start_time
     time_left_for_smac = time_limit - time_spent_so_far
-    queue = Queue()
+    queue = Queue(-1)
     automl = autosklearn.automl.AutoML(
         tmp_dataset_dir,
         output_dir,
-        time_left_for_smac,
+        int(time_left_for_smac),
         args.per_run_time_limit,
         log_dir=tmp_dataset_dir,
         ensemble_size=args.ensemble_size,
         ensemble_nbest=args.ensemble_nbest,
         initial_configurations_via_metalearning=args.metalearning_configurations,
         seed=args.seed,
-        ml_memory_limit=args.ml_memory_limit,
+        ml_memory_limit=int(args.ml_memory_limit),
         metadata_directory=args.metadata_directory,
         queue=queue,
         keep_models=False,
-        debug_mode=False,
+        debug_mode=True,
         include_estimators=args.include_estimators,
         include_preprocessors=args.include_preprocessors,
         resampling_strategy=resampling_strategy,
