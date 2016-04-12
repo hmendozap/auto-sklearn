@@ -12,7 +12,7 @@ from smac.smbo.smbo import SMBO
 from smac.scenario.scenario import Scenario
 from smac.tae.execute_ta_run import StatusType
 from smac.runhistory.runhistory import RunHistory
-from smac.runhistory.runhistory2epm import RunHistory2EPM
+from smac.runhistory.runhistory2epm import RunHistory2EPM4Cost
 
 from autosklearn.constants import *
 from autosklearn.metalearning.mismbo import \
@@ -477,11 +477,11 @@ class AutoMLSMBO(multiprocessing.Process):
         num_params = len(self.config_space.get_hyperparameters())
         # allocate a run history
         run_history = RunHistory()
-        rh2EPM = RunHistory2EPM(num_params=num_params,
-                                scenario=self.scenario,
-                                success_states=None,
-                                impute_censored_data=False,
-                                impute_state=None)
+        rh2EPM = RunHistory2EPM4Cost(num_params=num_params,
+                                     scenario=self.scenario,
+                                     success_states=None,
+                                     impute_censored_data=False,
+                                     impute_state=None)
         num_run = self.start_num_run
         smac = SMBO(self.scenario, seed)
 
