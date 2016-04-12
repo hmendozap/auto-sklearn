@@ -462,7 +462,7 @@ class AutoMLSMBO(multiprocessing.Process):
                                             grace_period_in_s=5)(self.run_smbo)
         safe_smbo(max_iters=self.smac_iters)
         
-    def run_smbo(self, max_iters=10):
+    def run_smbo(self, max_iters=1000):
         global evaluator
 
         # == first things first: load the datamanager

@@ -178,7 +178,7 @@ if __name__ == '__main__':
 
     time_spent_so_far = time.time() - start_time
     time_left_for_smac = time_limit - time_spent_so_far
-    queue = Queue(-1)
+    queue = Queue()
     automl = autosklearn.automl.AutoML(
         tmp_dataset_dir,
         output_dir,
@@ -193,7 +193,7 @@ if __name__ == '__main__':
         metadata_directory=args.metadata_directory,
         queue=queue,
         keep_models=False,
-        debug_mode=True,
+        debug_mode=False,
         include_estimators=args.include_estimators,
         include_preprocessors=args.include_preprocessors,
         resampling_strategy=resampling_strategy,
