@@ -43,6 +43,22 @@ def load_data(dataset_info, outputdir, tmp_dir=None, max_mem=None):
     return D
 
 
+def _load_config_list(task='classification'):
+    """
+    loads a list of dicts with task-focused configs
+    """
+    import cPickle as pkl
+    if task == 'classification':
+        task_file = 'class_configs.pkl'
+    else:
+        task_file = 'configs.pkl'
+
+    with open(task_file, 'rb') as fh:
+        data = pkl.load(fh)
+
+    return data
+
+
 # metalearning helpers
 def _calculate_metafeatures(data_feat_type, data_info_task, basename,
                             metalearning_cnt, x_train, y_train, watcher,
@@ -220,166 +236,21 @@ class AutoMLSMBO(multiprocessing.Process):
         # == set default configurations
         # first enqueue the default configuration from our config space
         if self.datamanager.info["task"] in CLASSIFICATION_TASKS:
-            config_dict = {'balancing:strategy': 'weighting',
-                           'classifier:__choice__': 'sgd',
-                           'classifier:sgd:loss': 'hinge',
-                           'classifier:sgd:penalty': 'l2',
-                           'classifier:sgd:alpha': 0.0001,
-                           'classifier:sgd:fit_intercept': 'True',
-                           'classifier:sgd:n_iter': 5,
-                           'classifier:sgd:learning_rate': 'optimal',
-                           'classifier:sgd:eta0': 0.01,
-                           'classifier:sgd:average': 'True',
-                           'imputation:strategy': 'mean',
-                           'one_hot_encoding:use_minimum_fraction': 'True',
-                           'one_hot_encoding:minimum_fraction': 0.1,
-                           'preprocessor:__choice__': 'no_preprocessing',
-                           'rescaling:__choice__': 'min/max'}
+            config_list = _load_config_list(task='classification')
             try:
-                config = Configuration(self.config_space, config_dict)
-                default_configs.append(config)
+                config = [Configuration(self.config_space, i) for i in config_list]
+                default_configs.extend(config)
             except ValueError as e:
-                self.logger.warning("Second default configurations %s cannot"
-                                    " be evaluated because of %s" %
-                                    (config_dict, e))
-
-            if self.datamanager.info["is_sparse"]:
-                config_dict = {'classifier:__choice__': 'extra_trees',
-                               'classifier:extra_trees:bootstrap': 'False',
-                               'classifier:extra_trees:criterion': 'gini',
-                               'classifier:extra_trees:max_depth': 'None',
-                               'classifier:extra_trees:max_features': 1.0,
-                               'classifier:extra_trees:min_samples_leaf': 5,
-                               'classifier:extra_trees:min_samples_split': 5,
-                               'classifier:extra_trees:min_weight_fraction_leaf': 0.0,
-                               'classifier:extra_trees:n_estimators': 100,
-                               'balancing:strategy': 'weighting',
-                               'imputation:strategy': 'mean',
-                               'one_hot_encoding:use_minimum_fraction': 'True',
-                               'one_hot_encoding:minimum_fraction': 0.1,
-                               'preprocessor:__choice__': 'truncatedSVD',
-                               'preprocessor:truncatedSVD:target_dim': 20,
-                               'rescaling:__choice__': 'min/max'}
-            else:
-                n_data_points = self.datamanager.data['X_train'].shape[0]
-                percentile = 20. / n_data_points
-                percentile = max(percentile, 2.)
-
-                config_dict = {'classifier:__choice__': 'extra_trees',
-                               'classifier:extra_trees:bootstrap': 'False',
-                               'classifier:extra_trees:criterion': 'gini',
-                               'classifier:extra_trees:max_depth': 'None',
-                               'classifier:extra_trees:max_features': 1.0,
-                               'classifier:extra_trees:min_samples_leaf': 5,
-                               'classifier:extra_trees:min_samples_split': 5,
-                               'classifier:extra_trees:min_weight_fraction_leaf': 0.0,
-                               'classifier:extra_trees:n_estimators': 100,
-                               'balancing:strategy': 'weighting',
-                               'imputation:strategy': 'mean',
-                               'one_hot_encoding:use_minimum_fraction': 'True',
-                               'one_hot_encoding:minimum_fraction': 0.1,
-                               'preprocessor:__choice__': 'select_percentile_classification',
-                               'preprocessor:select_percentile_classification:percentile': percentile,
-                               'preprocessor:select_percentile_classification:score_func': 'chi2',
-                               'rescaling:__choice__': 'min/max'}
-
-            try:
-                config = Configuration(self.config_space, config_dict)
-                default_configs.append(config)
-            except ValueError as e:
-                self.logger.warning("Third default configurations %s cannot"
-                                    " be evaluated because of %s" %
-                                    (config_dict, e))
-
-            if self.datamanager.info["is_sparse"]:
-                config_dict = {'balancing:strategy': 'weighting',
-                               'classifier:__choice__': 'multinomial_nb',
-                               'classifier:multinomial_nb:alpha': 1.0,
-                               'classifier:multinomial_nb:fit_prior': 'True',
-                               'imputation:strategy': 'mean',
-                               'one_hot_encoding:use_minimum_fraction': 'True',
-                               'one_hot_encoding:minimum_fraction': 0.1,
-                               'preprocessor:__choice__': 'no_preprocessing',
-                               'rescaling:__choice__': 'none'}
-            else:
-                config_dict = {'balancing:strategy': 'weighting',
-                               'classifier:__choice__': 'gaussian_nb',
-                               'imputation:strategy': 'mean',
-                               'one_hot_encoding:use_minimum_fraction': 'True',
-                               'one_hot_encoding:minimum_fraction': 0.1,
-                               'preprocessor:__choice__': 'no_preprocessing',
-                               'rescaling:__choice__': 'standardize'}
-            try:
-                config = Configuration(self.config_space, config_dict)
-                default_configs.append(config)
-            except ValueError as e:
-                self.logger.warning("Forth default configurations %s cannot"
-                                    " be evaluated because of %s" %
-                                    (config_dict, e))
-
+                self.logger.warning("Configurations list for classification cannot"
+                                    " be evaluated because of %s" % e)
         elif self.datamanager.info["task"] in REGRESSION_TASKS:
-            config_dict = {'regressor:__choice__': 'sgd',
-                           'regressor:sgd:loss': 'squared_loss',
-                           'regressor:sgd:penalty': 'l2',
-                           'regressor:sgd:alpha': 0.0001,
-                           'regressor:sgd:fit_intercept': 'True',
-                           'regressor:sgd:n_iter': 5,
-                           'regressor:sgd:learning_rate': 'optimal',
-                           'regressor:sgd:eta0': 0.01,
-                           'regressor:sgd:average': 'True',
-                           'imputation:strategy': 'mean',
-                           'one_hot_encoding:use_minimum_fraction': 'True',
-                           'one_hot_encoding:minimum_fraction': 0.1,
-                           'preprocessor:__choice__': 'no_preprocessing',
-                           'rescaling:__choice__': 'min/max'}
+            config_list = _load_config_list(task='regression')
             try:
-                config = Configuration(self.config_space, config_dict)
-                default_configs.append(config)
+                config = [Configuration(self.config_space, i) for i in config_list]
+                default_configs.extend(config)
             except ValueError as e:
-                self.logger.warning("Second default configurations %s cannot"
-                                    " be evaluated because of %s" %
-                                    (config_dict, e))
-
-            if self.datamanager.info["is_sparse"]:
-                config_dict = {'regressor:__choice__': 'extra_trees',
-                               'regressor:extra_trees:bootstrap': 'False',
-                               'regressor:extra_trees:criterion': 'mse',
-                               'regressor:extra_trees:max_depth': 'None',
-                               'regressor:extra_trees:max_features': 1.0,
-                               'regressor:extra_trees:min_samples_leaf': 5,
-                               'regressor:extra_trees:min_samples_split': 5,
-                               'regressor:extra_trees:n_estimators': 100,
-                               'imputation:strategy': 'mean',
-                               'one_hot_encoding:use_minimum_fraction': 'True',
-                               'one_hot_encoding:minimum_fraction': 0.1,
-                               'preprocessor:__choice__': 'truncatedSVD',
-                               'preprocessor:truncatedSVD:target_dim': 10,
-                               'rescaling:__choice__': 'min/max'}
-            else:
-                config_dict = {'regressor:__choice__': 'extra_trees',
-                               'regressor:extra_trees:bootstrap': 'False',
-                               'regressor:extra_trees:criterion': 'mse',
-                               'regressor:extra_trees:max_depth': 'None',
-                               'regressor:extra_trees:max_features': 1.0,
-                               'regressor:extra_trees:min_samples_leaf': 5,
-                               'regressor:extra_trees:min_samples_split': 5,
-                               'regressor:extra_trees:n_estimators': 100,
-                               'imputation:strategy': 'mean',
-                               'one_hot_encoding:use_minimum_fraction': 'True',
-                               'one_hot_encoding:minimum_fraction': 0.1,
-                               'preprocessor:__choice__': 'pca',
-                               'preprocessor:pca:keep_variance': 0.9,
-                               'preprocessor:pca:whiten': 'False',
-                               'rescaling:__choice__': 'min/max'}
-
-            try:
-                config = Configuration(self.config_space, config_dict)
-                default_configs.append(config)
-            except ValueError as e:
-                self.logger.warning("Third default configurations %s cannot"
-                                    " be evaluated because of %s" %
-                                    (config_dict, e))
-
+                self.logger.warning("Configurations list for regression cannot"
+                                    " be evaluated because of %s" % e)
         else:
             self.logger.info("Tasktype unknown: %s" %
                              TASK_TYPES_TO_STRING[self.datamanager.info[
