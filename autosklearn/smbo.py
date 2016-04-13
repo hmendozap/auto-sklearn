@@ -49,11 +49,13 @@ def _load_config_list(task='classification'):
     """
     import cPickle as pkl
     if task == 'classification':
-        task_file = 'class_configs.pkl'
+        task_file = 'config_class.pkl'
+    elif task == 'multilabel':
+        task_file = 'config_label.pkl'
     else:
-        task_file = 'configs.pkl'
+        task_file = 'config_reg.pkl'
 
-    with open(task_file, 'rb') as fh:
+    with open(os.path.join('../autosklearn/util', task_file), 'rb') as fh:
         data = pkl.load(fh)
 
     return data
