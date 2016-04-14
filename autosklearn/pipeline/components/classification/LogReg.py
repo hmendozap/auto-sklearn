@@ -38,7 +38,7 @@ class LogReg(AutoSklearnClassificationAlgorithm):
         self.n_features = None
         self.input_shape = None
         self.m_issparse = False
-        self.m_isregression = True
+        self.m_isregression = False
         self.m_isbinary = False
         self.m_ismultilabel = False
 
@@ -71,7 +71,7 @@ class LogReg(AutoSklearnClassificationAlgorithm):
         Xf, yf = self._prefit(X, y)
 
         epoch = (self.number_updates * self.batch_size)//X.shape[0]
-        number_epochs = min(max(2, epoch), 110)  # Cap the max number of possible epochs
+        number_epochs = min(max(2, epoch), 210)  # Cap the max number of possible epochs
 
         from ...implementations import LogisticRegression
         self.estimator = LogisticRegression.LogisticRegression(batch_size=self.batch_size,
@@ -130,45 +130,31 @@ class LogReg(AutoSklearnClassificationAlgorithm):
     @staticmethod
     def get_hyperparameter_search_space(dataset_properties=None):
 
-        solver_choices = ["adam", "adadelta", "adagrad", "sgd", "momentum", "nesterov"]
-
         policy_choices = ['fixed', 'inv', 'exp', 'step']
 
         batch_size = UniformIntegerHyperparameter("batch_size",
-                                                  100, 5000,
+                                                  100, 3000,
                                                   log=True,
-                                                  default=100)
+                                                  default=150)
 
         number_updates = UniformIntegerHyperparameter("number_updates",
-                                                      200, 2500,
+                                                      500, 10500,
                                                       log=True,
-                                                      default=250)
+                                                      default=1050)
 
         dropout_output = UniformFloatHyperparameter("dropout_output", 0.0, 0.99,
                                                     default=0.5)
 
-        lr = UniformFloatHyperparameter("learning_rate", 1e-6, 1, log=True,
+        lr = UniformFloatHyperparameter("learning_rate", 1e-6, 0.1, log=True,
                                         default=0.01)
 
         l2 = UniformFloatHyperparameter("lambda2", 1e-6, 1e-2, log=True,
                                         default=1e-3)
 
-        momentum = UniformFloatHyperparameter("momentum", 0.3, 0.999,
-                                              default=0.9)
+        solver = Constant(name="solver", value="adam")
 
-        solver = CategoricalHyperparameter(name="solver",
-                                           choices=solver_choices,
-                                           default="sgd")
-
-        beta1 = UniformFloatHyperparameter("beta1", 1e-4, 0.1,
-                                           log=True,
-                                           default=0.1)
-
-        beta2 = UniformFloatHyperparameter("beta2", 1e-4, 0.1,
-                                           log=True,
-                                           default=0.1)
-
-        rho = UniformFloatHyperparameter("rho", 0.0, 1.0, default=0.95)
+        beta1 = Constant(name="beta1", value=0.9)
+        beta2 = Constant(name="beta2", value=0.99)
 
         lr_policy = CategoricalHyperparameter(name="lr_policy",
                                               choices=policy_choices,
@@ -183,51 +169,36 @@ class LogReg(AutoSklearnClassificationAlgorithm):
                                            default=0.5)
 
         epoch_step = UniformIntegerHyperparameter("epoch_step",
-                                                  2, 10,
-                                                  default=2)
+                                                  2, 20,
+                                                  default=5)
 
         if (dataset_properties is not None and
-                dataset_properties.get('multiclass') is False):
+                    dataset_properties.get('multiclass') is False):
             non_linearities = Constant(name='activation', value='tanh')
         else:
             non_linearities = Constant(name='activation', value='softmax')
 
         cs = ConfigurationSpace()
-        # cs.add_hyperparameter(number_epochs)
         cs.add_hyperparameter(number_updates)
         cs.add_hyperparameter(batch_size)
         cs.add_hyperparameter(dropout_output)
         cs.add_hyperparameter(lr)
         cs.add_hyperparameter(l2)
         cs.add_hyperparameter(solver)
-        cs.add_hyperparameter(momentum)
         cs.add_hyperparameter(beta1)
         cs.add_hyperparameter(beta2)
-        cs.add_hyperparameter(rho)
         cs.add_hyperparameter(lr_policy)
         cs.add_hyperparameter(gamma)
         cs.add_hyperparameter(power)
         cs.add_hyperparameter(epoch_step)
         cs.add_hyperparameter(non_linearities)
 
-        momentum_depends_on_solver = InCondition(momentum, solver,
-                                                 values=["sgd", "momentum", "nesterov"])
-        beta1_depends_on_solver = EqualsCondition(beta1, solver, "adam")
-        beta2_depends_on_solver = EqualsCondition(beta2, solver, "adam")
-        rho_depends_on_solver = EqualsCondition(rho, solver, "adadelta")
-        lr_policy_depends_on_solver = InCondition(lr_policy, solver,
-                                                  ["adadelta", "adagrad", "sgd",
-                                                   "momentum", "nesterov"])
         gamma_depends_on_policy = InCondition(child=gamma, parent=lr_policy,
                                               values=['inv', 'exp', 'step'])
         power_depends_on_policy = EqualsCondition(power, lr_policy, 'inv')
-        epoch_step_depends_on_policy = EqualsCondition(epoch_step, lr_policy, 'step')
+        epoch_step_depends_on_policy = EqualsCondition(epoch_step,
+                                                       lr_policy, 'step')
 
-        cs.add_condition(momentum_depends_on_solver)
-        cs.add_condition(beta1_depends_on_solver)
-        cs.add_condition(beta2_depends_on_solver)
-        cs.add_condition(rho_depends_on_solver)
-        cs.add_condition(lr_policy_depends_on_solver)
         cs.add_condition(gamma_depends_on_policy)
         cs.add_condition(power_depends_on_policy)
         cs.add_condition(epoch_step_depends_on_policy)
