@@ -39,7 +39,7 @@ class FeedForwardNet(object):
                  is_sparse=False, is_binary=False, is_regression=False, is_multilabel=False):
 
         self.batch_size = batch_size
-        self.input_shape = input_shape
+        self.input_shape = np.float32(input_shape)
         self.num_layers = num_layers
         self.num_units_per_layer = np.int32(num_units_per_layer)
         self.dropout_per_layer = np.asarray(dropout_per_layer, dtype=theano.config.floatX)
@@ -107,7 +107,7 @@ class FeedForwardNet(object):
                  lasagne.layers.dropout(self.network,
                                         p=self.dropout_per_layer[i]),
                  num_units=self.num_units_per_layer[i],
-                 W=lasagne.init.Normal(std=self.std_per_layer[i], mean=0),
+                 W=lasagne.init.Normal(std=self.std_per_layer[i], mean=0.0),
                  b=lasagne.init.Constant(val=0.0),
                  nonlinearity=activation_function)
 
@@ -115,7 +115,7 @@ class FeedForwardNet(object):
         if self.is_regression:
             output_activation = lasagne.nonlinearities.linear
         elif self.is_binary or self.is_multilabel:
-            output_activation = lasagne.nonlinearities.sigmoid
+            output_activation = lasagne.nonlinearities.tanh
         else:
             output_activation = lasagne.nonlinearities.softmax
 
@@ -132,7 +132,7 @@ class FeedForwardNet(object):
         if self.is_regression:
             loss_function = lasagne.objectives.squared_error
         elif self.is_binary or self.is_multilabel:
-            loss_function = lasagne.objectives.binary_hinge_loss
+            loss_function = lasagne.objectives.binary_crossentropy
         else:
             loss_function = lasagne.objectives.categorical_crossentropy
 
