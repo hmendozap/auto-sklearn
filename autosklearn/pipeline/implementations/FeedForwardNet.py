@@ -69,7 +69,7 @@ class FeedForwardNet(object):
         self.activation = activation
 
         if is_sparse:
-            input_var = S.csr_matrix('inputs', dtype='float32')
+            input_var = S.csr_matrix('inputs', dtype=theano.config.floatX)
         else:
             input_var = T.matrix('inputs')
 

@@ -61,7 +61,7 @@ class LogisticRegression(object):
         self.activation = activation
 
         if is_sparse:
-            input_var = S.csr_matrix('inputs', dtype='float32')
+            input_var = S.csr_matrix('inputs', dtype=theano.config.floatX)
         else:
             input_var = T.matrix('inputs')
 
@@ -181,7 +181,7 @@ class LogisticRegression(object):
     def fit(self, X, y):
         # TODO: If batch size is bigger than available points
         # training is not executed.
-        if not self.is_binary:
+        if not self.is_binary and not self.is_multilabel:
             X = np.asarray(X, dtype=theano.config.floatX)
             y = np.asarray(y, dtype=theano.config.floatX)
 
