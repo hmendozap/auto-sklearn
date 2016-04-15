@@ -145,8 +145,8 @@ class LinReg(AutoSklearnRegressionAlgorithm):
 
         solver = Constant(name="solver", value="adam")
 
-        beta1 = Constant(name="beta1", value=0.9)
-        beta2 = Constant(name="beta2", value=0.99)
+        beta1 = Constant(name="beta1", value=0.1)
+        beta2 = Constant(name="beta2", value=0.01)
 
         lr_policy = CategoricalHyperparameter(name="lr_policy",
                                               choices=policy_choices,
@@ -164,7 +164,7 @@ class LinReg(AutoSklearnRegressionAlgorithm):
                                                   2, 20,
                                                   default=5)
 
-        non_linearities = Constant(name='activation', value='relu')
+        non_linearities = Constant(name='activation', value='linear')
 
         cs = ConfigurationSpace()
         cs.add_hyperparameter(number_updates)

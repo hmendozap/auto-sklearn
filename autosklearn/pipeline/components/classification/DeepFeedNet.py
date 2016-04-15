@@ -217,8 +217,8 @@ class DeepFeedNet(AutoSklearnClassificationAlgorithm):
 
         solver = Constant(name="solver", value="adam")
 
-        beta1 = Constant(name="beta1", value=0.9)
-        beta2 = Constant(name="beta2", value=0.99)
+        beta1 = Constant(name="beta1", value=0.1)
+        beta2 = Constant(name="beta2", value=0.01)
 
         lr_policy = CategoricalHyperparameter(name="lr_policy",
                                               choices=policy_choices,
@@ -238,7 +238,7 @@ class DeepFeedNet(AutoSklearnClassificationAlgorithm):
 
         if (dataset_properties is not None and
                 dataset_properties.get('multiclass') is False):
-            non_linearities = Constant(name='activation', value='sigmoid')
+            non_linearities = Constant(name='activation', value='tanh')
         else:
             non_linearities = Constant(name='activation', value='relu')
 
