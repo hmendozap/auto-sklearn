@@ -88,7 +88,7 @@ class LogisticRegression(object):
         if self.is_regression:
             output_activation = lasagne.nonlinearities.linear
         elif self.is_binary or self.is_multilabel:
-            output_activation = lasagne.nonlinearities.sigmoid
+            output_activation = lasagne.nonlinearities.tanh
         else:
             output_activation = lasagne.nonlinearities.softmax
 
@@ -181,7 +181,7 @@ class LogisticRegression(object):
     def fit(self, X, y):
         # TODO: If batch size is bigger than available points
         # training is not executed.
-        if not self.is_binary and not self.is_multilabel:
+        if not self.is_binary and not self.is_multilabel and not self.is_regression:
             X = np.asarray(X, dtype=theano.config.floatX)
             y = np.asarray(y, dtype=theano.config.floatX)
 
@@ -210,7 +210,10 @@ class LogisticRegression(object):
         # TODO: Add try-except statements
         if is_sparse:
             X = S.basic.as_sparse_or_tensor_variable(X)
+        if not self.is_binary and not self.is_multilabel and not self.is_regression:
+            X = np.asarray(X, dtype=theano.config.floatX)
         predictions = lasagne.layers.get_output(self.network, X, deterministic=True).eval()
+
         if self.is_binary:
             return np.append(1.0 - predictions, predictions, axis=1)
         else:

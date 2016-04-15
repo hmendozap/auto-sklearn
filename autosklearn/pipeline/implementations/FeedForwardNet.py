@@ -132,7 +132,7 @@ class FeedForwardNet(object):
         if self.is_regression:
             loss_function = lasagne.objectives.squared_error
         elif self.is_binary or self.is_multilabel:
-            loss_function = lasagne.objectives.binary_crossentropy
+            loss_function = lasagne.objectives.binary_hinge_loss
         else:
             loss_function = lasagne.objectives.categorical_crossentropy
 
@@ -177,8 +177,6 @@ class FeedForwardNet(object):
             updates = lasagne.updates.sgd(loss, params,
                                           learning_rate=lr_scalar)
 
-        # Validation was removed, as auto-sklearn handles that, if this net
-        # is to be used independently, validation accuracy has to be included
         if DEBUG:
             print("... compiling theano functions")
         self.train_fn = theano.function([input_var, target_var, lr_scalar],
@@ -210,7 +208,7 @@ class FeedForwardNet(object):
     def fit(self, X, y):
         # TODO: If batch size is bigger than available points
         # training is not executed.
-        if not self.is_binary and not self.is_multilabel:
+        if not self.is_binary and not self.is_multilabel and not self.is_regression:
             X = np.asarray(X, dtype=theano.config.floatX)
             y = np.asarray(y, dtype=theano.config.floatX)
         for epoch in range(self.num_epochs):
@@ -238,6 +236,8 @@ class FeedForwardNet(object):
         # TODO: Add try-except statements
         if is_sparse:
             X = S.basic.as_sparse_or_tensor_variable(X)
+        if not self.is_binary and not self.is_multilabel and not self.is_regression:
+            X = np.asarray(X, dtype=theano.config.floatX)
         predictions = lasagne.layers.get_output(self.network, X, deterministic=True).eval()
         if self.is_binary:
             return np.append(1.0 - predictions, predictions, axis=1)
