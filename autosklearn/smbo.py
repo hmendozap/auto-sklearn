@@ -48,14 +48,19 @@ def _load_config_list(task='classification'):
     loads a list of dicts with task-focused configs
     """
     import cPickle as pkl
-    if task == 'classification':
+    #config_path = '/home/ubuntu/gpu/lib/autosklearn/util'
+    config_path = '/home/mendozah/workspace/GPU_Track_Setup/auto-sklearn/autosklearn/util/'
+
+    if task == 'binary':
+        task_file = 'config_binary.pkl'
+    elif task == 'classification':
         task_file = 'config_class.pkl'
     elif task == 'multilabel':
         task_file = 'config_label.pkl'
     else:
         task_file = 'config_reg.pkl'
 
-    with open(os.path.join('../autosklearn/util', task_file), 'rb') as fh:
+    with open(os.path.join(config_path, task_file), 'rb') as fh:
         data = pkl.load(fh)
 
     return data
@@ -237,13 +242,29 @@ class AutoMLSMBO(multiprocessing.Process):
         default_configs = []
         # == set default configurations
         # first enqueue the default configuration from our config space
-        if self.datamanager.info["task"] in CLASSIFICATION_TASKS:
+        if self.datamanager.info["task"] == MULTICLASS_CLASSIFICATION:
             config_list = _load_config_list(task='classification')
             try:
                 config = [Configuration(self.config_space, i) for i in config_list]
                 default_configs.extend(config)
             except ValueError as e:
                 self.logger.warning("Configurations list for classification cannot"
+                                    " be evaluated because of %s" % e)
+        elif self.datamanager.info["task"] == BINARY_CLASSIFICATION:
+            config_list = _load_config_list(task='binary')
+            try:
+                config = [Configuration(self.config_space, i) for i in config_list]
+                default_configs.extend(config)
+            except ValueError as e:
+                self.logger.warning("Configurations list for regression cannot"
+                                    " be evaluated because of %s" % e)
+        elif self.datamanager.info["task"] == MULTILABEL_CLASSIFICATION:
+            config_list = _load_config_list(task='multilabel')
+            try:
+                config = [Configuration(self.config_space, i) for i in config_list]
+                default_configs.extend(config)
+            except ValueError as e:
+                self.logger.warning("Configurations list for regression cannot"
                                     " be evaluated because of %s" % e)
         elif self.datamanager.info["task"] in REGRESSION_TASKS:
             config_list = _load_config_list(task='regression')
