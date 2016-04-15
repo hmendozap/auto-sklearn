@@ -12,18 +12,19 @@ __all__ = [
 
 
 def get_configuration_space(info,
-                            include_estimators=None,
+                            include_classifiers=None,
+                            include_regressors=None,
                             include_preprocessors=None):
     include = dict()
     if include_preprocessors is not None:
         include['preprocessor'] = include_preprocessors
     if info['task'] in REGRESSION_TASKS:
-        if include_estimators is not None:
-            include['regressor'] = include_estimators
+        if include_classifiers is not None:
+            include['regressor'] = include_regressors
         return _get_regression_configuration_space(info, include)
     else:
-        if include_estimators is not None:
-            include['classifier'] = include_estimators
+        if include_classifiers is not None:
+            include['classifier'] = include_classifiers
         return _get_classification_configuration_space(info, include)
 
 

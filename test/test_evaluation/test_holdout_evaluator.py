@@ -82,7 +82,7 @@ class HoldoutEvaluatorTest(BaseEvaluatorTest):
 
         configuration_space = get_configuration_space(
             D.info,
-            include_estimators=['extra_trees'],
+            include_classifiers=['extra_trees'],
             include_preprocessors=['select_rates'])
         configuration = configuration_space.sample_configuration()
 

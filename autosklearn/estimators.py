@@ -136,7 +136,7 @@ class AutoSklearnClassifier(autosklearn.automl.AutoML):
             ensemble_nbest=ensemble_nbest,
             seed=seed,
             ml_memory_limit=ml_memory_limit,
-            include_estimators=include_estimators,
+            include_classifiers=include_estimators,
             include_preprocessors=include_preprocessors,
             resampling_strategy=resampling_strategy,
             tmp_dir=self._tmp_dir,

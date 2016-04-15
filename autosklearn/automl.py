@@ -26,14 +26,17 @@ from autosklearn.util import StopWatch, get_logger, setup_logger, \
 from autosklearn.ensemble_builder import main as ensemble_main
 from autosklearn.smbo import AutoMLSMBO
 
+
 def _create_search_space(tmp_dir, data_info, backend, watcher, logger,
-                         include_estimators=None, include_preprocessors=None):
+                         include_classifiers=None, include_regressors=None,
+                         include_preprocessors=None):
     task_name = 'CreateConfigSpace'
     watcher.start_task(task_name)
     configspace_path = os.path.join(tmp_dir, 'space.pcs')
     configuration_space = pipeline.get_configuration_space(
         data_info,
-        include_estimators=include_estimators,
+        include_classifiers=include_classifiers,
+        include_regressors=include_regressors,
         include_preprocessors=include_preprocessors)
     sp_string = pcs.write(configuration_space)
     backend.write_txt_file(configspace_path, sp_string,
@@ -82,18 +85,19 @@ class EnsembleProcess(multiprocessing.Process):
         buffer_time = 5
         time_left = self.limit - buffer_time
         safe_ensemble_script = pynisher.enforce_limits(wall_time_in_s=int(time_left))(ensemble_main)
-        safe_ensemble_script(autosklearn_tmp_dir = self.tmp_dir,
-                             dataset_name = self.dataset_name,
-                             task_type = self.task_type,
-                             metric = self.metric,
-                             limit = self.limit,
-                             output_dir = self.output_dir,
-                             ensemble_size = self.ensemble_size,
-                             ensemble_nbest = self.ensemble_nbest,
-                             seed = self.seed,
-                             shared_mode = self.shared_mode,
-                             max_iterations = self.max_iterations,
-                             precision = self.precision)
+        safe_ensemble_script(autosklearn_tmp_dir=self.tmp_dir,
+                             dataset_name=self.dataset_name,
+                             task_type=self.task_type,
+                             metric=self.metric,
+                             limit=self.limit,
+                             output_dir=self.output_dir,
+                             ensemble_size=self.ensemble_size,
+                             ensemble_nbest=self.ensemble_nbest,
+                             seed=self.seed,
+                             shared_mode=self.shared_mode,
+                             max_iterations=self.max_iterations,
+                             precision=self.precision)
+
 
 class AutoML(BaseEstimator, multiprocessing.Process):
 
@@ -112,7 +116,8 @@ class AutoML(BaseEstimator, multiprocessing.Process):
                  queue=None,
                  keep_models=True,
                  debug_mode=False,
-                 include_estimators=None,
+                 include_classifiers=None,
+                 include_regressors=None,
                  include_preprocessors=None,
                  resampling_strategy='holdout-iterative-fit',
                  resampling_strategy_arguments=None,
@@ -138,7 +143,8 @@ class AutoML(BaseEstimator, multiprocessing.Process):
         self._metadata_directory = metadata_directory
         self._queue = queue
         self._keep_models = keep_models
-        self._include_estimators = include_estimators
+        self._include_classifiers = include_classifiers
+        self._include_regressors = include_regressors
         self._include_preprocessors = include_preprocessors
         self._resampling_strategy = resampling_strategy
         self._resampling_strategy_arguments = resampling_strategy_arguments
@@ -382,7 +388,8 @@ class AutoML(BaseEstimator, multiprocessing.Process):
             self._backend,
             self._stopwatch,
             self._logger,
-            self._include_estimators,
+            self._include_classifiers,
+            self._include_regressors,
             self._include_preprocessors)
         self.configuration_space_created_hook(datamanager)
 

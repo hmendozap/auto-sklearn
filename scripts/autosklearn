@@ -194,7 +194,7 @@ if __name__ == '__main__':
         queue=queue,
         keep_models=False,
         debug_mode=False,
-        include_estimators=args.include_estimators,
+        include_classifiers=args.include_estimators,
         include_preprocessors=args.include_preprocessors,
         resampling_strategy=resampling_strategy,
         resampling_strategy_arguments=resampling_strategy_arguments)
