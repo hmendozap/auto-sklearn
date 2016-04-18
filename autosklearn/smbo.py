@@ -44,6 +44,7 @@ def load_data(dataset_info, outputdir, tmp_dir=None, max_mem=None):
 
 
 def _load_config_list(task='classification'):
+    pass
     """
     loads a list of dicts with task-focused configs
     """
@@ -59,9 +60,12 @@ def _load_config_list(task='classification'):
         task_file = 'config_label.pkl'
     else:
         task_file = 'config_reg.pkl'
-
-    with open(os.path.join(config_path, task_file), 'rb') as fh:
-        data = pkl.load(fh)
+    try:
+        with open(os.path.join(config_path, task_file), 'rb') as fh:
+            data = pkl.load(fh)
+    except IOError:
+        print('No files with configuration found')
+        return []
 
     return data
 
