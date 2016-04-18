@@ -179,11 +179,15 @@ class LogisticRegression(object):
                                on_unused_input='ignore')
 
     def fit(self, X, y):
-        # TODO: If batch size is bigger than available points
-        # training is not executed.
-        if not self.is_binary and not self.is_multilabel and not self.is_regression:
+        if self.batch_size > X.shape[0]:
+            self.batch_size = X.shape[0]
+            print('One update per epoch batch size')
+
+        try:
             X = np.asarray(X, dtype=theano.config.floatX)
             y = np.asarray(y, dtype=theano.config.floatX)
+        except Exception as E:
+            print('Fit casting error: %s' % E)
 
         for epoch in range(self.num_epochs):
             train_err = 0
@@ -209,9 +213,14 @@ class LogisticRegression(object):
     def predict_proba(self, X, is_sparse=False):
         # TODO: Add try-except statements
         if is_sparse:
+            X = X.astype(np.float32)
             X = S.basic.as_sparse_or_tensor_variable(X)
-        if not self.is_binary and not self.is_multilabel and not self.is_regression:
-            X = np.asarray(X, dtype=theano.config.floatX)
+        else:
+            try:
+                X = np.asarray(X, dtype=theano.config.floatX)
+            except Exception as E:
+                print('Prediction casting error: %s' % E)
+
         predictions = lasagne.layers.get_output(self.network, X, deterministic=True).eval()
 
         if self.is_binary:

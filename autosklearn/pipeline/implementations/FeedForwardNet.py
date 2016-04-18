@@ -39,11 +39,11 @@ class FeedForwardNet(object):
                  is_sparse=False, is_binary=False, is_regression=False, is_multilabel=False):
 
         self.batch_size = batch_size
-        self.input_shape = np.float32(input_shape)
+        self.input_shape = input_shape
         self.num_layers = num_layers
-        self.num_units_per_layer = np.int32(num_units_per_layer)
+        self.num_units_per_layer = num_units_per_layer
         self.dropout_per_layer = np.asarray(dropout_per_layer, dtype=theano.config.floatX)
-        self.num_output_units = np.int32(num_output_units)
+        self.num_output_units = num_output_units
         self.dropout_output = T.cast(dropout_output, dtype=theano.config.floatX)
         self.std_per_layer = np.asarray(std_per_layer, dtype=theano.config.floatX)
         self.momentum = T.cast(momentum, dtype=theano.config.floatX)
@@ -65,6 +65,7 @@ class FeedForwardNet(object):
         self.is_binary = is_binary
         self.is_regression = is_regression
         self.is_multilabel = is_multilabel
+        self.is_sparse = is_sparse
         self.solver = solver
         self.activation = activation
 
@@ -96,7 +97,7 @@ class FeedForwardNet(object):
         # Choose hidden activation function
         if self.is_binary or self.is_multilabel:
             activation_function = self.binary_activation.get(self.activation,
-                                                             lasagne.nonlinearities.sigmoid)
+                                                             lasagne.nonlinearities.tanh)
         else:
             activation_function = self.multiclass_activation.get(self.activation,
                                                                  lasagne.nonlinearities.rectify)
@@ -115,7 +116,7 @@ class FeedForwardNet(object):
         if self.is_regression:
             output_activation = lasagne.nonlinearities.linear
         elif self.is_binary or self.is_multilabel:
-            output_activation = lasagne.nonlinearities.tanh
+            output_activation = lasagne.nonlinearities.sigmoid
         else:
             output_activation = lasagne.nonlinearities.softmax
 
@@ -132,7 +133,7 @@ class FeedForwardNet(object):
         if self.is_regression:
             loss_function = lasagne.objectives.squared_error
         elif self.is_binary or self.is_multilabel:
-            loss_function = lasagne.objectives.binary_hinge_loss
+            loss_function = lasagne.objectives.binary_crossentropy
         else:
             loss_function = lasagne.objectives.categorical_crossentropy
 
@@ -140,9 +141,9 @@ class FeedForwardNet(object):
 
         # Aggregate loss mean function with l2 Regularization on all layers' params
         if self.is_regression or self.is_binary:
-            loss = loss.sum(dtype=theano.config.floatX)
+            loss = T.sum(loss, dtype=theano.config.floatX)
         else:
-            loss = loss.mean(dtype=theano.config.floatX)
+            loss = T.mean(loss, dtype=theano.config.floatX)
         l2_penalty = self.lambda2 * lasagne.regularization.regularize_network_params(
             self.network, lasagne.regularization.l2)
         loss += l2_penalty
@@ -184,7 +185,10 @@ class FeedForwardNet(object):
                                         updates=updates,
                                         allow_input_downcast=True,
                                         profile=False,
-                                        on_unused_input='warn')
+                                        on_unused_input='warn',
+                                        name='train_fn')
+        if DEBUG:
+            print('... compiling update function')
         self.update_function = self._policy_function()
 
     def _policy_function(self):
@@ -203,14 +207,18 @@ class FeedForwardNet(object):
         return theano.function([gm, epoch, powr, step],
                                decay,
                                allow_input_downcast=True,
-                               on_unused_input='ignore')
+                               on_unused_input='ignore',
+                               name='update_fn')
+
 
     def fit(self, X, y):
         # TODO: If batch size is bigger than available points
         # training is not executed.
-        if not self.is_binary and not self.is_multilabel and not self.is_regression:
+        try:
             X = np.asarray(X, dtype=theano.config.floatX)
             y = np.asarray(y, dtype=theano.config.floatX)
+        except Exception as E:
+            print('Fit casting error: %s' % E)
         for epoch in range(self.num_epochs):
             train_err = 0
             train_batches = 0
@@ -233,11 +241,15 @@ class FeedForwardNet(object):
             return np.argmax(predictions, axis=1)
 
     def predict_proba(self, X, is_sparse=False):
-        # TODO: Add try-except statements
         if is_sparse:
+            X = X.astype(np.float32)
             X = S.basic.as_sparse_or_tensor_variable(X)
-        if not self.is_binary and not self.is_multilabel and not self.is_regression:
-            X = np.asarray(X, dtype=theano.config.floatX)
+        else:
+            try:
+                X = np.asarray(X, dtype=theano.config.floatX)
+            except Exception as E:
+                print('Prediction casting error: %s' % E)
+
         predictions = lasagne.layers.get_output(self.network, X, deterministic=True).eval()
         if self.is_binary:
             return np.append(1.0 - predictions, predictions, axis=1)
