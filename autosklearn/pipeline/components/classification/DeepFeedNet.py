@@ -126,20 +126,12 @@ class DeepFeedNet(AutoSklearnClassificationAlgorithm):
     def predict(self, X):
         if self.estimator is None:
             raise NotImplementedError
-        if sp.issparse(X):
-            is_sparse = True
-        else:
-            is_sparse = False
-        return self.estimator.predict(X, is_sparse)
+        return self.estimator.predict(X, self.m_issparse)
 
     def predict_proba(self, X):
         if self.estimator is None:
             raise NotImplementedError()
-        if sp.issparse(X):
-            is_sparse = True
-        else:
-            is_sparse = False
-        return self.estimator.predict_proba(X, is_sparse)
+        return self.estimator.predict_proba(X, self.m_issparse)
 
     @staticmethod
     def get_properties(dataset_properties=None):
@@ -168,11 +160,12 @@ class DeepFeedNet(AutoSklearnClassificationAlgorithm):
         layer_choices = ["c", "d"]
 
         batch_size = UniformIntegerHyperparameter("batch_size",
-                                                  64, 256,
-                                                  default=128)
+                                                  32, 4096,
+                                                  log=True,
+                                                  default=32)
 
         number_updates = UniformIntegerHyperparameter("number_updates",
-                                                      200, 2500,
+                                                      200, 3500,
                                                       log=True,
                                                       default=200)
 
@@ -182,7 +175,7 @@ class DeepFeedNet(AutoSklearnClassificationAlgorithm):
 
         num_units_layer_1 = UniformIntegerHyperparameter("num_units_layer_1",
                                                          64, 4096,
-                                                         default=128)
+                                                         default=256)
 
         num_units_layer_2 = UniformIntegerHyperparameter("num_units_layer_2",
                                                          64, 4096,
@@ -207,11 +200,11 @@ class DeepFeedNet(AutoSklearnClassificationAlgorithm):
         l2 = UniformFloatHyperparameter("lambda2", 1e-6, 1e-2, log=True,
                                         default=1e-3)
 
-        std_layer_1 = UniformFloatHyperparameter("std_layer_1", 1e-6, 0.1,
+        std_layer_1 = UniformFloatHyperparameter("std_layer_1", 0.001, 0.1,
                                                  log=True,
                                                  default=0.005)
 
-        std_layer_2 = UniformFloatHyperparameter("std_layer_2", 1e-6, 0.1,
+        std_layer_2 = UniformFloatHyperparameter("std_layer_2", 0.001, 0.1,
                                                  log=True,
                                                  default=0.005)
 
@@ -238,7 +231,7 @@ class DeepFeedNet(AutoSklearnClassificationAlgorithm):
 
         if (dataset_properties is not None and
                 dataset_properties.get('multiclass') is False):
-            non_linearities = Constant(name='activation', value='tanh')
+            non_linearities = Constant(name='activation', value='sigmoid')
         else:
             non_linearities = Constant(name='activation', value='relu')
 

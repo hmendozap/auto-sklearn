@@ -100,20 +100,12 @@ class LogReg(AutoSklearnClassificationAlgorithm):
     def predict(self, X):
         if self.estimator is None:
             raise NotImplementedError
-        if sp.issparse(X):
-            is_sparse = True
-        else:
-            is_sparse = False
-        return self.estimator.predict(X, is_sparse)
+        return self.estimator.predict(X, self.m_issparse)
 
     def predict_proba(self, X):
         if self.estimator is None:
             raise NotImplementedError()
-        if sp.issparse(X):
-            is_sparse = True
-        else:
-            is_sparse = False
-        return self.estimator.predict_proba(X, is_sparse)
+        return self.estimator.predict_proba(X, self.m_issparse)
 
     @staticmethod
     def get_properties(dataset_properties=None):
@@ -146,10 +138,10 @@ class LogReg(AutoSklearnClassificationAlgorithm):
                                                     default=0.5)
 
         lr = UniformFloatHyperparameter("learning_rate", 1e-6, 0.1, log=True,
-                                        default=0.01)
+                                        default=0.1)
 
         l2 = UniformFloatHyperparameter("lambda2", 1e-6, 1e-2, log=True,
-                                        default=1e-3)
+                                        default=1e-5)
 
         solver = Constant(name="solver", value="adam")
 
@@ -173,7 +165,7 @@ class LogReg(AutoSklearnClassificationAlgorithm):
                                                   default=5)
 
         if (dataset_properties is not None and
-                    dataset_properties.get('multiclass') is False):
+                dataset_properties.get('multiclass') is False):
             non_linearities = Constant(name='activation', value='tanh')
         else:
             non_linearities = Constant(name='activation', value='softmax')
