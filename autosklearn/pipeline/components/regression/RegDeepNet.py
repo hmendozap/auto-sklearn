@@ -159,13 +159,13 @@ class RegDeepNet(AutoSklearnRegressionAlgorithm):
         layer_choices = ["c", "d"]
 
         batch_size = UniformIntegerHyperparameter("batch_size",
-                                                  64, 256,
-                                                  default=128)
+                                                  64, 2048,
+                                                  default=150)
 
         number_updates = UniformIntegerHyperparameter("number_updates",
-                                                      200, 2500,
+                                                      200, 5500,
                                                       log=True,
-                                                      default=200)
+                                                      default=512)
 
         num_layers = CategoricalHyperparameter("num_layers",
                                                choices=layer_choices,
@@ -227,7 +227,9 @@ class RegDeepNet(AutoSklearnRegressionAlgorithm):
                                                   2, 10,
                                                   default=2)
 
-        non_linearities = Constant(name='activation', value='relu')
+        non_linearities = CategoricalHyperparameter(name='activation',
+                                                    choices=['relu', 'leaky', 'very_leaky'],
+                                                    default='relu')
 
         cs = ConfigurationSpace()
         # cs.add_hyperparameter(number_epochs)

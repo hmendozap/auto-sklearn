@@ -175,10 +175,12 @@ class DeepFeedNet(AutoSklearnClassificationAlgorithm):
 
         num_units_layer_1 = UniformIntegerHyperparameter("num_units_layer_1",
                                                          64, 4096,
+                                                         log=True,
                                                          default=256)
 
         num_units_layer_2 = UniformIntegerHyperparameter("num_units_layer_2",
                                                          64, 4096,
+                                                         log=True,
                                                          default=128)
 
         dropout_layer_1 = UniformFloatHyperparameter("dropout_layer_1",

@@ -125,9 +125,9 @@ class LogReg(AutoSklearnClassificationAlgorithm):
         policy_choices = ['fixed', 'inv', 'exp', 'step']
 
         batch_size = UniformIntegerHyperparameter("batch_size",
-                                                  100, 3000,
+                                                  32, 2048,
                                                   log=True,
-                                                  default=150)
+                                                  default=100)
 
         number_updates = UniformIntegerHyperparameter("number_updates",
                                                       500, 10500,
@@ -138,12 +138,13 @@ class LogReg(AutoSklearnClassificationAlgorithm):
                                                     default=0.5)
 
         lr = UniformFloatHyperparameter("learning_rate", 1e-6, 0.1, log=True,
-                                        default=0.1)
+                                        default=1e-6)
 
         l2 = UniformFloatHyperparameter("lambda2", 1e-6, 1e-2, log=True,
-                                        default=1e-5)
+                                        default=1e-6)
 
-        solver = Constant(name="solver", value="adam")
+        solver = CategoricalHyperparameter(name="solver", choices=["sgd", "adam"],
+                                           default="adam")
 
         beta1 = Constant(name="beta1", value=0.1)
         beta2 = Constant(name="beta2", value=0.01)
@@ -166,7 +167,7 @@ class LogReg(AutoSklearnClassificationAlgorithm):
 
         if (dataset_properties is not None and
                 dataset_properties.get('multiclass') is False):
-            non_linearities = Constant(name='activation', value='tanh')
+            non_linearities = Constant(name='activation', value='sigmoid')
         else:
             non_linearities = Constant(name='activation', value='softmax')
 
