@@ -19,7 +19,7 @@ def get_configuration_space(info,
     if include_preprocessors is not None:
         include['preprocessor'] = include_preprocessors
     if info['task'] in REGRESSION_TASKS:
-        if include_classifiers is not None:
+        if include_regressors is not None:
             include['regressor'] = include_regressors
         return _get_regression_configuration_space(info, include)
     else:

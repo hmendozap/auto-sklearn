@@ -38,6 +38,7 @@ def namespace_to_automl_format(namespace):
         raise ValueError(namespace.resampling_strategy)
     return strategy, arguments
 
+
 def get_options():
     parser = ArgParser()
     parser.add_argument('-c', '--config',
@@ -99,11 +100,16 @@ def get_options():
                              'building process.')
 
     # Arguments concerning ParamSklearn
-    parser.add_argument('--include-estimators',
+    parser.add_argument('--include-classifiers',
                         nargs='*',
                         default=None,
                         type=str,
-                        help='Only use these estimators inside auto-sklearn')
+                        help='Only use these classifiers inside auto-sklearn')
+    parser.add_argument('--include-regressors',
+                        nargs='*',
+                        default=None,
+                        type=str,
+                        help='Only use these regressors inside auto-sklearn')
     parser.add_argument('--include-preprocessors',
                         nargs='*',
                         default=None,
@@ -194,7 +200,8 @@ if __name__ == '__main__':
         queue=queue,
         keep_models=False,
         debug_mode=False,
-        include_classifiers=args.include_estimators,
+        include_classifiers=args.include_classifiers,
+        include_regressors=args.include_regressors,
         include_preprocessors=args.include_preprocessors,
         resampling_strategy=resampling_strategy,
         resampling_strategy_arguments=resampling_strategy_arguments)
