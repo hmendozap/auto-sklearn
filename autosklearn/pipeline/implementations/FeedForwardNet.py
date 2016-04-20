@@ -140,7 +140,7 @@ class FeedForwardNet(object):
         loss = loss_function(prediction, target_var)
 
         # Aggregate loss mean function with l2 Regularization on all layers' params
-        if self.is_regression or self.is_binary:
+        if self.is_regression or self.is_binary or self.is_multilabel:
             loss = T.sum(loss, dtype=theano.config.floatX)
         else:
             loss = T.mean(loss, dtype=theano.config.floatX)
@@ -210,15 +210,20 @@ class FeedForwardNet(object):
                                on_unused_input='ignore',
                                name='update_fn')
 
-
     def fit(self, X, y):
-        # TODO: If batch size is bigger than available points
-        # training is not executed.
-        try:
-            X = np.asarray(X, dtype=theano.config.floatX)
-            y = np.asarray(y, dtype=theano.config.floatX)
-        except Exception as E:
-            print('Fit casting error: %s' % E)
+        if self.batch_size > X.shape[0]:
+            self.batch_size = X.shape[0]
+            print('One update per epoch batch size')
+
+        if self.is_sparse:
+            X = X.astype(np.float32)
+        else:
+            try:
+                X = np.asarray(X, dtype=theano.config.floatX)
+                y = np.asarray(y, dtype=theano.config.floatX)
+            except Exception as E:
+                print('Fit casting error: %s' % E)
+
         for epoch in range(self.num_epochs):
             train_err = 0
             train_batches = 0
@@ -243,7 +248,7 @@ class FeedForwardNet(object):
     def predict_proba(self, X, is_sparse=False):
         if is_sparse:
             X = X.astype(np.float32)
-            X = S.basic.as_sparse_or_tensor_variable(X)
+            X = S.as_sparse_or_tensor_variable(X)
         else:
             try:
                 X = np.asarray(X, dtype=theano.config.floatX)

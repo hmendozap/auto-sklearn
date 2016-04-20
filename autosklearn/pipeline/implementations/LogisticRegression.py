@@ -57,6 +57,7 @@ class LogisticRegression(object):
         self.is_binary = is_binary
         self.is_regression = is_regression
         self.is_multilabel = is_multilabel
+        self.is_sparse = is_sparse
         self.solver = solver
         self.activation = activation
 
@@ -88,7 +89,7 @@ class LogisticRegression(object):
         if self.is_regression:
             output_activation = lasagne.nonlinearities.linear
         elif self.is_binary or self.is_multilabel:
-            output_activation = lasagne.nonlinearities.tanh
+            output_activation = lasagne.nonlinearities.sigmoid
         else:
             output_activation = lasagne.nonlinearities.softmax
 
@@ -105,17 +106,17 @@ class LogisticRegression(object):
         if self.is_regression:
             loss_function = lasagne.objectives.squared_error
         elif self.is_binary or self.is_multilabel:
-            loss_function = lasagne.objectives.binary_hinge_loss
+            loss_function = lasagne.objectives.binary_crossentropy
         else:
             loss_function = lasagne.objectives.categorical_crossentropy
 
         loss = loss_function(prediction, target_var)
 
         # Aggregate loss mean function with l2 Regularization on all layers' params
-        if self.is_regression or self.is_binary:
-            loss = loss.sum(dtype=theano.config.floatX)
+        if self.is_regression or self.is_binary or self.is_multilabel:
+            loss = T.sum(loss, dtype=theano.config.floatX)
         else:
-            loss = loss.mean(dtype=theano.config.floatX)
+            loss = T.mean(loss, dtype=theano.config.floatX)
         l2_penalty = self.lambda2 * lasagne.regularization.regularize_network_params(
             self.network, lasagne.regularization.l2)
         loss += l2_penalty
@@ -183,11 +184,14 @@ class LogisticRegression(object):
             self.batch_size = X.shape[0]
             print('One update per epoch batch size')
 
-        try:
-            X = np.asarray(X, dtype=theano.config.floatX)
-            y = np.asarray(y, dtype=theano.config.floatX)
-        except Exception as E:
-            print('Fit casting error: %s' % E)
+        if self.is_sparse:
+            X = X.astype(np.float32)
+        else:
+            try:
+                X = np.asarray(X, dtype=theano.config.floatX)
+                y = np.asarray(y, dtype=theano.config.floatX)
+            except Exception as E:
+                print('Fit casting error: %s' % E)
 
         for epoch in range(self.num_epochs):
             train_err = 0
