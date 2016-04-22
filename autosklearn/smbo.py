@@ -53,12 +53,19 @@ def _load_config_list(task='classification'):
     config_path = '/home/mendozah/workspace/GPU_Track_Setup/auto-sklearn/autosklearn/util/'
 
     if task == 'binary':
+        print("============BINARY!!!!=========")
         task_file = 'config_binary.pkl'
     elif task == 'classification':
+        print("============CLASSIF!!!!=========")
         task_file = 'config_class.pkl'
     elif task == 'multilabel':
+        print("============LABEL!!!!=========")
         task_file = 'config_label.pkl'
+    elif task == 'sparse_regression':
+        print("============SPARSE!!!!=========")
+        task_file = 'config_sp_reg.pkl'
     else:
+        print("============REGRESS!!!!=========")
         task_file = 'config_reg.pkl'
     try:
         with open(os.path.join(config_path, task_file), 'rb') as fh:
@@ -271,7 +278,10 @@ class AutoMLSMBO(multiprocessing.Process):
                 self.logger.warning("Configurations list for regression cannot"
                                     " be evaluated because of %s" % e)
         elif self.datamanager.info["task"] in REGRESSION_TASKS:
-            config_list = _load_config_list(task='regression')
+            if self.datamanager.info["is_sparse"]:
+                config_list = _load_config_list(task='sparse_regression')
+            else:
+                config_list = _load_config_list(task='dense_regression')
             try:
                 config = [Configuration(self.config_space, i) for i in config_list]
                 default_configs.extend(config)
