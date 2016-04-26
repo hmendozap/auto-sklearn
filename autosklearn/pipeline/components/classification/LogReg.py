@@ -190,12 +190,16 @@ class LogReg(AutoSklearnClassificationAlgorithm):
         cs.add_hyperparameter(epoch_step)
         cs.add_hyperparameter(non_linearities)
 
+        beta1_depends_on_solver = EqualsCondition(beta1, solver, "adam")
+        beta2_depends_on_solver = EqualsCondition(beta2, solver, "adam")
         gamma_depends_on_policy = InCondition(child=gamma, parent=lr_policy,
                                               values=['inv', 'exp', 'step'])
         power_depends_on_policy = EqualsCondition(power, lr_policy, 'inv')
         epoch_step_depends_on_policy = EqualsCondition(epoch_step,
                                                        lr_policy, 'step')
 
+        cs.add_condition(beta1_depends_on_solver)
+        cs.add_condition(beta2_depends_on_solver)
         cs.add_condition(gamma_depends_on_policy)
         cs.add_condition(power_depends_on_policy)
         cs.add_condition(epoch_step_depends_on_policy)

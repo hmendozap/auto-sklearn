@@ -142,7 +142,8 @@ class LinReg(AutoSklearnRegressionAlgorithm):
         l2 = UniformFloatHyperparameter("lambda2", 1e-6, 1e-2, log=True,
                                         default=1e-3)
 
-        solver = Constant(name="solver", value="adam")
+        solver = CategoricalHyperparameter(name="solver", choices=["sgd", "adam"],
+                                           default="adam")
 
         beta1 = UniformFloatHyperparameter("beta1", 1e-4, 0.1,
                                            log=True,
@@ -185,12 +186,15 @@ class LinReg(AutoSklearnRegressionAlgorithm):
         cs.add_hyperparameter(epoch_step)
         cs.add_hyperparameter(non_linearities)
 
+        beta1_depends_on_solver = EqualsCondition(beta1, solver, "adam")
+        beta2_depends_on_solver = EqualsCondition(beta2, solver, "adam")
         gamma_depends_on_policy = InCondition(child=gamma, parent=lr_policy,
                                               values=['inv', 'exp', 'step'])
         power_depends_on_policy = EqualsCondition(power, lr_policy, 'inv')
         epoch_step_depends_on_policy = EqualsCondition(epoch_step,
                                                        lr_policy, 'step')
-
+        cs.add_condition(beta1_depends_on_solver)
+        cs.add_condition(beta2_depends_on_solver)
         cs.add_condition(gamma_depends_on_policy)
         cs.add_condition(power_depends_on_policy)
         cs.add_condition(epoch_step_depends_on_policy)
